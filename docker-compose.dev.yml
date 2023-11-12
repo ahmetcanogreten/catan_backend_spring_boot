@@ -1,0 +1,15 @@
+version: '3.1'
+
+services:
+
+  catan-db:
+    image: mariadb
+    container_name: catan-db
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_USER: dev
+      MARIADB_PASSWORD: dev
+      MARIADB_DATABASE: dev
+    ports:
+      - 3306:3306
