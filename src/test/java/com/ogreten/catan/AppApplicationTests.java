@@ -1,4 +1,4 @@
-package com.ogreten.App;
+package com.ogreten.catan;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
