@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "CatanApplication",
+            "request": "launch",
+            "mainClass": "com.ogreten.catan.CatanApplication",
+            "projectName": "catan",
+            "env": {
+                "MARIA_DB_HOST": "localhost",
+                "MARIA_DB_PORT": "3306",
+                "MARIA_DB_DATABASE": "dev",
+                "MARIA_DB_USERNAME": "dev",
+                "MARIA_DB_PASSWORD": "dev",
+            }
+        }
+    ]
+}
