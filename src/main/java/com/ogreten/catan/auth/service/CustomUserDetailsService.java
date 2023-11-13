@@ -1,12 +1,12 @@
-package com.ogreten.App.auth.service;
+package com.ogreten.catan.auth.service;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.ogreten.App.auth.domain.CustomUserDetails;
-import com.ogreten.App.auth.repository.UserRepository;
+import com.ogreten.catan.auth.domain.CustomUserDetails;
+import com.ogreten.catan.auth.repository.UserRepository;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {

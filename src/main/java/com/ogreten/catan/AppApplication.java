@@ -1,4 +1,4 @@
-package com.ogreten.App;
+package com.ogreten.catan;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

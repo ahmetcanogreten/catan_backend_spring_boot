@@ -1,4 +1,4 @@
-package com.ogreten.App.auth.controller;
+package com.ogreten.catan.auth.controller;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ogreten.App.auth.domain.CustomUserDetails;
-import com.ogreten.App.auth.domain.User;
-import com.ogreten.App.auth.repository.UserRepository;
+import com.ogreten.catan.auth.domain.CustomUserDetails;
+import com.ogreten.catan.auth.domain.User;
+import com.ogreten.catan.auth.repository.UserRepository;
 
 @RequestMapping("api/user")
 @RestController

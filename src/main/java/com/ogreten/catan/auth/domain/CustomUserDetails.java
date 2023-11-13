@@ -1,4 +1,4 @@
-package com.ogreten.App.auth.domain;
+package com.ogreten.catan.auth.domain;
 
 import java.util.Collection;
 import java.util.Collections;
