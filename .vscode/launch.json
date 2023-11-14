@@ -15,7 +15,7 @@
             "name": "CatanApplication",
             "request": "launch",
             "mainClass": "com.ogreten.catan.CatanApplication",
-            "projectName": "catan",
+            "projectName": "App",
             "env": {
                 "MARIA_DB_HOST": "localhost",
                 "MARIA_DB_PORT": "3306",
