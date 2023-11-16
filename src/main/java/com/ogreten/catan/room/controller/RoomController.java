@@ -40,8 +40,13 @@ public class RoomController {
     }
 
     @PostMapping("")
-    public Room createRoom(@RequestBody RoomNameDTO roomNameDTO) {
+    public Room createRoom(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @RequestBody RoomNameDTO roomNameDTO) {
+        User user = customUserDetails.getUser();
+
         Room room = new Room();
+        room.setOwner(user);
         room.setName(roomNameDTO.getName());
         room.setCode(RandomStringGenerator.generate(6));
         room.setGameStarted(false);
