@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ogreten.catan.game.domain.Game;
-import com.ogreten.catan.leaderboard.dto.UserWithPoints;
 import com.ogreten.catan.leaderboard.repository.LeaderboardRepository;
+import com.ogreten.catan.leaderboard.schema.UserWithPoints;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

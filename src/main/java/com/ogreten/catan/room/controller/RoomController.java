@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ogreten.catan.auth.domain.CustomUserDetails;
 import com.ogreten.catan.auth.domain.User;
 import com.ogreten.catan.room.domain.Room;
-import com.ogreten.catan.room.dto.RoomNameDTO;
 import com.ogreten.catan.room.repository.RoomRepository;
+import com.ogreten.catan.room.schema.RoomWithOnlyName;
 import com.ogreten.catan.utils.RandomStringGenerator;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -65,7 +65,7 @@ public class RoomController {
     @PostMapping("")
     public Room createRoom(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
-            @Parameter(description = "Name of the room") @RequestBody RoomNameDTO roomNameDTO) {
+            @Parameter(description = "Name of the room") @RequestBody RoomWithOnlyName roomNameDTO) {
         User user = customUserDetails.getUser();
 
         Room room = new Room();

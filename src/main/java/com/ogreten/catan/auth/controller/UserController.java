@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ogreten.catan.auth.domain.CustomUserDetails;
 import com.ogreten.catan.auth.domain.User;
-import com.ogreten.catan.auth.dto.UserWithoutPassword;
 import com.ogreten.catan.auth.repository.UserRepository;
+import com.ogreten.catan.auth.schema.UserWithoutPassword;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,7 +36,7 @@ public class UserController {
     @Operation(summary = "Register a new user", description = "Register a new user", tags = { "user", "post" })
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {
-                    @Content(schema = @Schema(implementation = User.class), mediaType = "application/json") }),
+                    @Content(schema = @Schema(implementation = UserWithoutPassword.class), mediaType = "application/json") }),
     })
     @PostMapping("/register")
     public UserWithoutPassword register(
@@ -53,7 +53,7 @@ public class UserController {
     @Operation(summary = "Get logged in user", description = "Get logged in user", tags = { "user", "get" })
     @ApiResponses({
             @ApiResponse(responseCode = "200", content = {
-                    @Content(schema = @Schema(implementation = User.class), mediaType = "application/json") }),
+                    @Content(schema = @Schema(implementation = UserWithoutPassword.class), mediaType = "application/json") }),
     })
     @GetMapping("/login")
     public UserWithoutPassword login(@AuthenticationPrincipal CustomUserDetails customUserDetails) {

@@ -1,4 +1,4 @@
-package com.ogreten.catan.auth.dto;
+package com.ogreten.catan.auth.schema;
 
 import java.util.UUID;
 

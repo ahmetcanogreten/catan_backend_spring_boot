@@ -1,4 +1,4 @@
-package com.ogreten.catan.leaderboard.dto;
+package com.ogreten.catan.leaderboard.schema;
 
 import com.ogreten.catan.auth.domain.User;
 
