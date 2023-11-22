@@ -10,8 +10,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ogreten.catan.auth.domain.CustomUserDetails;
 import com.ogreten.catan.auth.domain.User;
+import com.ogreten.catan.auth.dto.UserWithoutPassword;
 import com.ogreten.catan.auth.repository.UserRepository;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "User", description = "User Management API")
 @RequestMapping("api/user")
 @RestController
 public class UserController {
@@ -23,16 +33,31 @@ public class UserController {
         this.userRepository = userRepository;
     }
 
+    @Operation(summary = "Register a new user", description = "Register a new user", tags = { "user", "post" })
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", content = {
+                    @Content(schema = @Schema(implementation = User.class), mediaType = "application/json") }),
+    })
     @PostMapping("/register")
-    public User register(@RequestBody User user) {
+    public UserWithoutPassword register(
+            @Parameter(description = "JSON for user to be created. It contains email, password, firstName and lastName.") @RequestBody User user) {
+
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         String encodedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(encodedPassword);
-        return userRepository.save(user);
+        user = userRepository.save(user);
+
+        return UserWithoutPassword.fromUser(user);
     }
 
+    @Operation(summary = "Get logged in user", description = "Get logged in user", tags = { "user", "get" })
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", content = {
+                    @Content(schema = @Schema(implementation = User.class), mediaType = "application/json") }),
+    })
     @GetMapping("/login")
-    public User login(@AuthenticationPrincipal CustomUserDetails user) {
-        return user.getUser();
+    public UserWithoutPassword login(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        User user = customUserDetails.getUser();
+        return UserWithoutPassword.fromUser(user);
     }
 }

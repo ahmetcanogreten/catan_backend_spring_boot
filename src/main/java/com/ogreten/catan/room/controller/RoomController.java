@@ -21,6 +21,15 @@ import com.ogreten.catan.room.dto.RoomNameDTO;
 import com.ogreten.catan.room.repository.RoomRepository;
 import com.ogreten.catan.utils.RandomStringGenerator;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@Tag(name = "Room", description = "Room Management API")
 @RestController
 @RequestMapping("/api/rooms")
 public class RoomController {
@@ -31,18 +40,32 @@ public class RoomController {
         this.roomRepository = roomRepository;
     }
 
+    @Operation(summary = "Get active rooms", description = "Get active rooms. That is rooms whose games are not started yet.", tags = {
+            "room",
+            "get" })
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", content = {
+                    @Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") }),
+    })
     @GetMapping("/active")
     public Page<Room> getActiveRooms(
-            @RequestParam(defaultValue = "0") int pageNo,
-            @RequestParam(defaultValue = "10") int pageSize) {
+            @Parameter(description = "Page of the active rooms.") @RequestParam(defaultValue = "0") int pageNo,
+            @Parameter(description = "Page size of the active rooms.") @RequestParam(defaultValue = "10") int pageSize) {
         Pageable pageable = PageRequest.of(pageNo, pageSize);
         return roomRepository.findAllByIsGameStartedFalse(pageable);
     }
 
+    @Operation(summary = "Create a room", description = "Create a room with a name", tags = {
+            "room",
+            "post" })
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", content = {
+                    @Content(schema = @Schema(implementation = Room.class), mediaType = "application/json") }),
+    })
     @PostMapping("")
     public Room createRoom(
             @AuthenticationPrincipal CustomUserDetails customUserDetails,
-            @RequestBody RoomNameDTO roomNameDTO) {
+            @Parameter(description = "Name of the room") @RequestBody RoomNameDTO roomNameDTO) {
         User user = customUserDetails.getUser();
 
         Room room = new Room();
@@ -53,9 +76,18 @@ public class RoomController {
         return roomRepository.save(room);
     }
 
+    @Operation(summary = "Join a room", description = "Join a room using the join code", tags = {
+            "room",
+            "post" })
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", content = {
+                    @Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") }),
+            @ApiResponse(responseCode = "404", content = {
+                    @Content(schema = @Schema()) }),
+    })
     @PostMapping("/join")
     public ResponseEntity<Room> joinRoom(@AuthenticationPrincipal CustomUserDetails customUserDetails,
-            @RequestParam String code) {
+            @Parameter(description = "The join code of the room to be joined.") @RequestParam String code) {
         User user = customUserDetails.getUser();
 
         Optional<Room> optionalRoom = roomRepository.findByCode(code);

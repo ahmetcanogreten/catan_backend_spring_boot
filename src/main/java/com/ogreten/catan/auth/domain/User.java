@@ -2,8 +2,6 @@ package com.ogreten.catan.auth.domain;
 
 import java.util.UUID;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,7 +19,6 @@ import lombok.NoArgsConstructor;
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = "email")
 })
-@JsonIgnoreProperties(value = { "password" }, allowSetters = true)
 public class User {
 
     @Id
