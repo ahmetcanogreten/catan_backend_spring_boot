@@ -19,7 +19,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.transaction.Transactional;
 
+@Transactional
 @Tag(name = "Leaderboard", description = "Leaderboard Management API")
 @RestController
 @RequestMapping("/api/leaderboard")

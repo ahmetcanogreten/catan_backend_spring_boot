@@ -28,6 +28,7 @@ import java.util.Set;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 
+@Transactional
 @Tag(name = "Game", description = "Game Management API")
 @RestController
 @RequestMapping("/api/games")
@@ -49,7 +50,6 @@ public class GameController {
             @Content(schema = @Schema(implementation = Game.class), mediaType = "application/json") })
     @ApiResponse(responseCode = "404", content = {
             @Content(schema = @Schema()) })
-    @Transactional
     @PostMapping()
     public ResponseEntity<Game> startGame(
             @Parameter(description = "Room id of the game to be started.", example = "1") @RequestParam int roomId) {
