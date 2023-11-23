@@ -19,6 +19,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Room {
+    public static final int CODE_LENGTH = 6;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;

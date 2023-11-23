@@ -19,7 +19,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
@@ -36,10 +35,8 @@ public class UserController {
     }
 
     @Operation(summary = "Register a new user", description = "Register a new user", tags = { "user", "post" })
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", content = {
-                    @Content(schema = @Schema(implementation = UserWithoutPasswordOut.class), mediaType = "application/json") }),
-    })
+    @ApiResponse(responseCode = "200", content = {
+            @Content(schema = @Schema(implementation = UserWithoutPasswordOut.class), mediaType = "application/json") })
     @PostMapping("/register")
     public UserWithoutPasswordOut register(
             @Parameter(description = "JSON for user to be created. It contains email, password, firstName and lastName.") @RequestBody @Valid UserCreateIn userIn) {
@@ -58,10 +55,8 @@ public class UserController {
     }
 
     @Operation(summary = "Get logged in user", description = "Get logged in user", tags = { "user", "get" })
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", content = {
-                    @Content(schema = @Schema(implementation = UserWithoutPasswordOut.class), mediaType = "application/json") }),
-    })
+    @ApiResponse(responseCode = "200", content = {
+            @Content(schema = @Schema(implementation = UserWithoutPasswordOut.class), mediaType = "application/json") })
     @GetMapping("/login")
     public UserWithoutPasswordOut login(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
         User user = customUserDetails.getUser();

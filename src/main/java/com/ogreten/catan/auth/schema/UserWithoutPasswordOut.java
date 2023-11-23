@@ -5,9 +5,11 @@ import java.util.UUID;
 import com.ogreten.catan.auth.domain.User;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 @Schema(name = "UserWithoutPassword", description = "User information without password field")
 public class UserWithoutPasswordOut {
 
@@ -24,11 +26,10 @@ public class UserWithoutPasswordOut {
     private String lastName;
 
     public static UserWithoutPasswordOut fromUser(User user) {
-        UserWithoutPasswordOut userWithoutPassword = new UserWithoutPasswordOut();
-        userWithoutPassword.setId(user.getId());
-        userWithoutPassword.setEmail(user.getEmail());
-        userWithoutPassword.setFirstName(user.getFirstName());
-        userWithoutPassword.setLastName(user.getLastName());
-        return userWithoutPassword;
+        return new UserWithoutPasswordOut(
+                user.getId(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName());
     }
 }

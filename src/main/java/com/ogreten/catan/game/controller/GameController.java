@@ -17,7 +17,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.transaction.Transactional;
 
@@ -46,16 +45,14 @@ public class GameController {
     }
 
     @Operation(summary = "Start a game", description = "Start a game from existing room.", tags = { "game", "post" })
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", content = {
-                    @Content(schema = @Schema(implementation = Game.class), mediaType = "application/json") }),
-            @ApiResponse(responseCode = "404", content = {
-                    @Content(schema = @Schema()) }),
-    })
+    @ApiResponse(responseCode = "200", content = {
+            @Content(schema = @Schema(implementation = Game.class), mediaType = "application/json") })
+    @ApiResponse(responseCode = "404", content = {
+            @Content(schema = @Schema()) })
     @Transactional
     @PostMapping()
     public ResponseEntity<Game> startGame(
-            @Parameter(description = "Room id of the game to be started.") @RequestParam int roomId) {
+            @Parameter(description = "Room id of the game to be started.", example = "1") @RequestParam int roomId) {
         Optional<Room> optionalRoom = roomRepository.findById(roomId);
 
         if (optionalRoom.isEmpty()) {
