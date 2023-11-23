@@ -45,7 +45,9 @@ public class SpringSecurityConfig {
 
         return http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(
-                        auth -> auth.requestMatchers(new AntPathRequestMatcher("/api/user/register"))
+                        auth -> auth.requestMatchers(new AntPathRequestMatcher("/api/user/register"),
+                                new AntPathRequestMatcher("/swagger-ui/**"),
+                                new AntPathRequestMatcher("/v3/**"))
                                 .permitAll())
                 .authorizeHttpRequests(
                         auth -> auth.requestMatchers(new AntPathRequestMatcher("/**")).authenticated())
