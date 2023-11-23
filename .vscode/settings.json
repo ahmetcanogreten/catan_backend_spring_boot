@@ -1,13 +1,4 @@
 {
     "java.configuration.updateBuildConfiguration": "automatic",
     "java.compile.nullAnalysis.mode": "automatic",
-    "java.test.config": {
-        "env": {
-            "MARIA_DB_HOST": "localhost",
-            "MARIA_DB_PORT": "3306",
-            "MARIA_DB_DATABASE": "dev",
-            "MARIA_DB_USERNAME": "dev",
-            "MARIA_DB_PASSWORD": "dev",
-        }
-    }
 }

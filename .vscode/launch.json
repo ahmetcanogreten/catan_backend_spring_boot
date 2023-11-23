@@ -15,13 +15,6 @@
             "name": "CatanApplication",
             "request": "launch",
             "mainClass": "com.ogreten.catan.CatanApplication",
-            "env": {
-                "MARIA_DB_HOST": "localhost",
-                "MARIA_DB_PORT": "3306",
-                "MARIA_DB_DATABASE": "dev",
-                "MARIA_DB_USERNAME": "dev",
-                "MARIA_DB_PASSWORD": "dev",
-            }
-        }
+        },
     ]
 }
