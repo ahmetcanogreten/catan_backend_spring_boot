@@ -173,28 +173,39 @@ public class RoomController {
                 int size = room.getUsers().size();
 
                 User bot;
-                Optional<User> optionalbot;
                 switch (size) {
                         case 1:
-                                optionalbot = userRepository.findByEmail("bot1@bot.com");
-                                if (optionalbot.isEmpty()) {
-                                        return ResponseEntity.badRequest().build();
-                                }
-                                bot = optionalbot.get();
+                                bot = userRepository.findByEmail("bot1@bot.com").orElseGet(() -> {
+                                        User user = new User();
+                                        user.setEmail("bot1@bot.com");
+                                        user.setFirstName("Albert");
+                                        user.setLastName("Einstein");
+                                        userRepository.save(user);
+                                        return user;
+
+                                });
                                 break;
                         case 2:
-                                optionalbot = userRepository.findByEmail("bot2@bot.com");
-                                if (optionalbot.isEmpty()) {
-                                        return ResponseEntity.badRequest().build();
-                                }
-                                bot = optionalbot.get();
+                                bot = userRepository.findByEmail("bot2@bot.com").orElseGet(() -> {
+                                        User user = new User();
+                                        user.setEmail("bot2@bot.com");
+                                        user.setFirstName("Marie");
+                                        user.setLastName("Curie");
+                                        userRepository.save(user);
+                                        return user;
+
+                                });
                                 break;
                         case 3:
-                                optionalbot = userRepository.findByEmail("bot3@bot.com");
-                                if (optionalbot.isEmpty()) {
-                                        return ResponseEntity.badRequest().build();
-                                }
-                                bot = optionalbot.get();
+                                bot = userRepository.findByEmail("bot3@bot.com").orElseGet(() -> {
+                                        User user = new User();
+                                        user.setEmail("bot3@bot.com");
+                                        user.setFirstName("Nikola");
+                                        user.setLastName("Tesla");
+                                        userRepository.save(user);
+                                        return user;
+
+                                });
                                 break;
                         default:
                                 return ResponseEntity.badRequest().build();

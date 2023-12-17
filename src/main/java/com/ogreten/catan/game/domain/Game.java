@@ -1,6 +1,7 @@
 package com.ogreten.catan.game.domain;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -14,7 +15,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToOne;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,11 +32,11 @@ public class Game {
     private Instant finishedAt;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    Map<String, Object> resources;
+    List<Map<String, Object>> resources;
 
     @OneToOne
     private Room room;
 
-    @OneToMany
+    @ManyToMany
     private Set<User> users;
 }

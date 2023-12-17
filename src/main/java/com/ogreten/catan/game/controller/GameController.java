@@ -26,6 +26,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 @Transactional
@@ -69,15 +71,51 @@ public class GameController {
         Set<User> users = new HashSet<>(room.getUsers());
         game.setUsers(users);
 
-        game.setResources(null); // TODO :
+        game.setResources(room.getResources());
         gameRepository.save(game);
 
         GameState gameState = new GameState();
         gameState.setGame(game);
-        gameState.setTurnUser(room.getOwner()); // TODO : random | Add list of users for turn sequence
+        gameState.setTurnUser(room.getOwner());
         gameStateRepository.save(gameState);
 
         return ResponseEntity.ok().body(game);
+    }
+
+    @Operation(summary = "Start a game", description = "Start a game from existing room.", tags = { "game", "post" })
+    @ApiResponse(responseCode = "200", content = {
+            @Content(schema = @Schema(implementation = Game.class), mediaType = "application/json") })
+    @ApiResponse(responseCode = "404", content = {
+            @Content(schema = @Schema()) })
+    @GetMapping("/{gameId}")
+    public ResponseEntity<Game> getGame(
+            @Parameter(description = "Room id of the game to be started.", example = "1") @PathVariable int gameId) {
+        Optional<Game> optionalGame = gameRepository.findById(gameId);
+
+        if (optionalGame.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Game game = optionalGame.get();
+        return ResponseEntity.ok().body(game);
+    }
+
+    @Operation(summary = "Start a game", description = "Start a game from existing room.", tags = { "game", "post" })
+    @ApiResponse(responseCode = "200", content = {
+            @Content(schema = @Schema(implementation = Game.class), mediaType = "application/json") })
+    @ApiResponse(responseCode = "404", content = {
+            @Content(schema = @Schema()) })
+    @GetMapping("/{gameId}/state")
+    public ResponseEntity<GameState> getGameState(
+            @Parameter(description = "Room id of the game to be started.", example = "1") @PathVariable int gameId) {
+        Optional<GameState> optionalGameState = gameStateRepository.findByGameId(gameId);
+
+        if (optionalGameState.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        GameState gameState = optionalGameState.get();
+        return ResponseEntity.ok().body(gameState);
     }
 
 }
