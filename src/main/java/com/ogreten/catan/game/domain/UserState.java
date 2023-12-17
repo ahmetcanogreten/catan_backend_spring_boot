@@ -1,0 +1,32 @@
+package com.ogreten.catan.game.domain;
+
+import com.ogreten.catan.auth.domain.User;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Data
+@NoArgsConstructor
+public class UserState {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+
+    @ManyToOne
+    private User user;
+
+    @ManyToOne
+    private Game game;
+
+    private int numberOfBrick;
+    private int numberOfLumber;
+    private int numberOfOre;
+    private int numberOfGrain;
+    private int numberOfWool;
+}

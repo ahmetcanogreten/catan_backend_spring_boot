@@ -34,6 +34,9 @@ public class Game {
     @JdbcTypeCode(SqlTypes.JSON)
     List<Map<String, Object>> resources;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    List<String> usersCycle;
+
     @OneToOne
     private Room room;
 
