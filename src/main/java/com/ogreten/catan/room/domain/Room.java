@@ -1,6 +1,11 @@
 package com.ogreten.catan.room.domain;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import com.ogreten.catan.auth.domain.User;
 
@@ -27,6 +32,9 @@ public class Room {
     private String name;
     private String code;
     private boolean isGameStarted;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<Map<String, Object>> resources;
 
     @ManyToMany
     private Set<User> users;

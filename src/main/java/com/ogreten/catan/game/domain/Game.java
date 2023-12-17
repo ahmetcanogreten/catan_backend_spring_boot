@@ -1,6 +1,7 @@
 package com.ogreten.catan.game.domain;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.annotations.JdbcTypeCode;
@@ -9,7 +10,6 @@ import org.hibernate.type.SqlTypes;
 import com.ogreten.catan.auth.domain.User;
 import com.ogreten.catan.room.domain.Room;
 
-import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -31,7 +31,7 @@ public class Game {
     private Instant finishedAt;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    JsonType resources;
+    Map<String, Object> resources;
 
     @OneToOne
     private Room room;
