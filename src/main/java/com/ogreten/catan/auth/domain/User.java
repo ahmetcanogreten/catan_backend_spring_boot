@@ -2,6 +2,8 @@ package com.ogreten.catan.auth.domain;
 
 import java.util.UUID;
 
+import org.hibernate.annotations.ColumnDefault;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -29,5 +31,8 @@ public class User {
     private String password;
     private String firstName;
     private String lastName;
+
+    @ColumnDefault("false")
+    private boolean isBot;
 
 }

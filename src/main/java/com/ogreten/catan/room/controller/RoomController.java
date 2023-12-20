@@ -180,6 +180,7 @@ public class RoomController {
                                         user.setEmail("bot1@bot.com");
                                         user.setFirstName("Albert");
                                         user.setLastName("Einstein");
+                                        user.setBot(true);
                                         userRepository.save(user);
                                         return user;
 
@@ -191,6 +192,7 @@ public class RoomController {
                                         user.setEmail("bot2@bot.com");
                                         user.setFirstName("Marie");
                                         user.setLastName("Curie");
+                                        user.setBot(true);
                                         userRepository.save(user);
                                         return user;
 
@@ -202,6 +204,7 @@ public class RoomController {
                                         user.setEmail("bot3@bot.com");
                                         user.setFirstName("Nikola");
                                         user.setLastName("Tesla");
+                                        user.setBot(true);
                                         userRepository.save(user);
                                         return user;
 

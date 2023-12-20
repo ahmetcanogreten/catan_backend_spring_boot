@@ -64,7 +64,8 @@ class UserControllerTest {
                 email,
                 encodedPassword,
                 firstName,
-                lastName);
+                lastName,
+                false);
 
         // when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
 
