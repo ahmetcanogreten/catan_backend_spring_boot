@@ -1,5 +1,10 @@
 package com.ogreten.catan.game.domain;
 
+import java.util.Map;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import com.ogreten.catan.auth.domain.User;
 
 import jakarta.persistence.Entity;
@@ -29,4 +34,7 @@ public class UserState {
     private int numberOfOre;
     private int numberOfGrain;
     private int numberOfWool;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<String, Object> buildings;
 }

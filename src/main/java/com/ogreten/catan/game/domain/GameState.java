@@ -1,11 +1,7 @@
 package com.ogreten.catan.game.domain;
 
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import com.ogreten.catan.auth.domain.User;
 
-import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -29,6 +25,8 @@ public class GameState {
     @ManyToOne
     private User turnUser;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    JsonType board;
+    private TurnState turnState;
+
+    private int dice1;
+    private int dice2;
 }
