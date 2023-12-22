@@ -14,6 +14,7 @@
             "type": "java",
             "name": "CatanApplication",
             "request": "launch",
+            "projectName": "catan",
             "mainClass": "com.ogreten.catan.CatanApplication",
         },
     ]
