@@ -178,8 +178,8 @@ public class RoomController {
                                 bot = userRepository.findByEmail("bot1@bot.com").orElseGet(() -> {
                                         User user = new User();
                                         user.setEmail("bot1@bot.com");
-                                        user.setFirstName("Albert");
-                                        user.setLastName("Einstein");
+                                        user.setFirstName("Barbara");
+                                        user.setLastName("Liskov");
                                         user.setBot(true);
                                         userRepository.save(user);
                                         return user;
@@ -190,8 +190,8 @@ public class RoomController {
                                 bot = userRepository.findByEmail("bot2@bot.com").orElseGet(() -> {
                                         User user = new User();
                                         user.setEmail("bot2@bot.com");
-                                        user.setFirstName("Marie");
-                                        user.setLastName("Curie");
+                                        user.setFirstName("Alan");
+                                        user.setLastName("Turing");
                                         user.setBot(true);
                                         userRepository.save(user);
                                         return user;
@@ -202,8 +202,8 @@ public class RoomController {
                                 bot = userRepository.findByEmail("bot3@bot.com").orElseGet(() -> {
                                         User user = new User();
                                         user.setEmail("bot3@bot.com");
-                                        user.setFirstName("Nikola");
-                                        user.setLastName("Tesla");
+                                        user.setFirstName("Ada");
+                                        user.setLastName("Lovelace");
                                         user.setBot(true);
                                         userRepository.save(user);
                                         return user;

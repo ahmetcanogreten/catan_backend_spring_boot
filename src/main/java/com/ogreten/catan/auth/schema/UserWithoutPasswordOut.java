@@ -25,11 +25,14 @@ public class UserWithoutPasswordOut {
     @Schema(description = "Last name of the user", example = "Ogreten")
     private String lastName;
 
+    private boolean isBot;
+
     public static UserWithoutPasswordOut fromUser(User user) {
         return new UserWithoutPasswordOut(
                 user.getId(),
                 user.getEmail(),
                 user.getFirstName(),
-                user.getLastName());
+                user.getLastName(),
+                user.isBot());
     }
 }
