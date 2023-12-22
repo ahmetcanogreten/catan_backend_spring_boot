@@ -9,10 +9,14 @@ import com.ogreten.catan.game.domain.Game;
 import com.ogreten.catan.game.domain.GameState;
 import com.ogreten.catan.game.domain.TurnState;
 import com.ogreten.catan.game.domain.UserState;
+import com.ogreten.catan.game.domain.SettlementRoadMapping;
 import com.ogreten.catan.game.repository.GameRepository;
 import com.ogreten.catan.game.repository.GameStateRepository;
 import com.ogreten.catan.game.repository.UserStateRepository;
 import com.ogreten.catan.game.schema.RollInfo;
+import com.ogreten.catan.game.service.ResourceSettlementMapper;
+import com.ogreten.catan.game.service.SettlementRoadMapper;
+import com.ogreten.catan.room.domain.Resource;
 import com.ogreten.catan.room.domain.Room;
 import com.ogreten.catan.room.repository.RoomRepository;
 
@@ -31,6 +35,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
@@ -95,23 +100,74 @@ public class GameController {
                 Collections.shuffle(usersCycle);
                 game.setUsersCycle(usersCycle);
 
-                game.setResources(room.getResources());
+                final List<Resource> roomResources = room.getResources();
+
+                game.setResources(roomResources);
                 gameRepository.save(game);
 
                 // Create user states
                 for (User user : users) {
+                        // TODO : Check if there is a settlement two roads away from another
+                        final int randomUserSettlementIndex = (new Random().nextInt(54));
+                        final List<Integer> roadsOfRandomUserSettlementIndex = SettlementRoadMapper.getInstance()
+                                        .getRoadsOfVillage(randomUserSettlementIndex);
+
+                        final int randomUserRoadIndex = roadsOfRandomUserSettlementIndex
+                                        .get(new Random().nextInt(roadsOfRandomUserSettlementIndex.size()));
+
+                        int numberOfBrick = 0;
+                        int numberOfLumber = 0;
+                        int numberOfOre = 0;
+                        int numberOfGrain = 0;
+                        int numberOfWool = 0;
+
+                        final List<Integer> resourceIndexesNearSettlement = ResourceSettlementMapper.getInstance()
+                                        .getResourceIndexesNearSettlement(randomUserSettlementIndex);
+
+                        for (Integer resourceIndex : resourceIndexesNearSettlement) {
+                                Resource resource = roomResources.stream()
+                                                .filter(eachResource -> eachResource.getIndex() == resourceIndex)
+                                                .findFirst().get();
+
+                                switch (resource.getType()) {
+                                        case "hills":
+                                                numberOfBrick += 1;
+                                                break;
+                                        case "forest":
+                                                numberOfLumber += 1;
+                                                break;
+                                        case "mountains":
+                                                numberOfOre += 1;
+                                                break;
+                                        case "fields":
+                                                numberOfGrain += 1;
+                                                break;
+                                        case "pasture":
+                                                numberOfWool += 1;
+                                                break;
+                                        default:
+                                                break;
+                                }
+                        }
+
                         UserState userState = new UserState();
                         userState.setGame(game);
                         userState.setUser(user);
-                        userState.setNumberOfBrick(0);
-                        userState.setNumberOfLumber(0);
-                        userState.setNumberOfOre(0);
-                        userState.setNumberOfGrain(0);
-                        userState.setNumberOfWool(0);
+                        userState.setNumberOfBrick(numberOfBrick);
+                        userState.setNumberOfLumber(
+                                        numberOfLumber);
+                        userState.setNumberOfOre(
+                                        numberOfOre);
+                        userState.setNumberOfGrain(
+                                        numberOfGrain);
+                        userState.setNumberOfWool(
+                                        numberOfWool);
 
                         userState.setBuildings(Map.of(
-                                        "road", List.of(),
-                                        "settlement", List.of(),
+                                        "road", List.of(
+                                                        randomUserRoadIndex),
+                                        "settlement", List.of(
+                                                        randomUserSettlementIndex),
                                         "city", List.of()));
                         userStateRepository.save(userState);
                 }
@@ -216,4 +272,9 @@ public class GameController {
                 return ResponseEntity.ok().body(gameState);
         }
 
+        @GetMapping("/village-roads")
+        public List<SettlementRoadMapping> getVillageRoadMappings() {
+                SettlementRoadMapper villageRoadChecker = SettlementRoadMapper.getInstance();
+                return villageRoadChecker.getSettlementRoadMappings();
+        }
 }

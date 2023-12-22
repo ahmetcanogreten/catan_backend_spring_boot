@@ -2,13 +2,13 @@ package com.ogreten.catan.game.domain;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import com.ogreten.catan.auth.domain.User;
+import com.ogreten.catan.room.domain.Resource;
 import com.ogreten.catan.room.domain.Room;
 
 import jakarta.persistence.Entity;
@@ -32,7 +32,7 @@ public class Game {
     private Instant finishedAt;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    List<Map<String, Object>> resources;
+    List<Resource> resources;
 
     @JdbcTypeCode(SqlTypes.JSON)
     List<String> usersCycle;

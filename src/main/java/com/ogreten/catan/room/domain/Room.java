@@ -34,7 +34,7 @@ public class Room {
     private boolean isGameStarted;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    private List<Map<String, Object>> resources;
+    private List<Resource> resources;
 
     @ManyToMany
     private Set<User> users;
