@@ -51,4 +51,29 @@ public class SettlementRoadMapper {
         return roads;
     }
 
+    public List<Integer> getVillageOfRoads(int roadIndex) {
+        List<Integer> villages = new ArrayList<>();
+        for (SettlementRoadMapping villageRoadMapping : settlementRoadMappings) {
+            if (villageRoadMapping.getRoadIndex() == roadIndex) {
+                villages.add(villageRoadMapping.getSettlementIndex());
+            }
+        }
+        return villages;
+    }
+
+    public boolean isSettlementAtLeastTwoRoadAwayToOtherSettlements(int settlementIndex,
+            List<Integer> otherSettlements) {
+        List<Integer> roads = getRoadsOfVillage(settlementIndex);
+        for (Integer road : roads) {
+            List<Integer> villages = getVillageOfRoads(road);
+            for (Integer village : villages) {
+                if (otherSettlements.contains(village)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+
+    }
+
 }

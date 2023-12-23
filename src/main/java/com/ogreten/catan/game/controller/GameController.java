@@ -109,10 +109,17 @@ public class GameController {
                 game.setResources(roomResources);
                 gameRepository.save(game);
 
+                List<Integer> usersSettlementIndexes = new ArrayList<>();
+
                 // Create user states
                 for (User user : users) {
-                        // TODO : Check if there is a settlement two roads away from another
-                        final int randomUserSettlementIndex = (new Random().nextInt(54));
+                        int randomUserSettlementIndex = (new Random().nextInt(54));
+                        while (!SettlementRoadMapper.getInstance().isSettlementAtLeastTwoRoadAwayToOtherSettlements(
+                                        randomUserSettlementIndex, usersSettlementIndexes)) {
+                                randomUserSettlementIndex = (new Random().nextInt(54));
+                        }
+                        usersSettlementIndexes.add(randomUserSettlementIndex);
+
                         final List<Integer> roadsOfRandomUserSettlementIndex = SettlementRoadMapper.getInstance()
                                         .getRoadsOfVillage(randomUserSettlementIndex);
 
