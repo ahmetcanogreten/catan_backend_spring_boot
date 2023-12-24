@@ -1,5 +1,10 @@
 package com.ogreten.catan.game.domain;
 
+import java.util.List;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import com.ogreten.catan.auth.domain.User;
 
 import jakarta.persistence.Entity;
@@ -29,4 +34,13 @@ public class GameState {
 
     private int dice1;
     private int dice2;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<Integer> availableSettlementsForTurnUser;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<Integer> availableRoadsForTurnUser;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<Integer> availableCitiesForTurnUser;
 }

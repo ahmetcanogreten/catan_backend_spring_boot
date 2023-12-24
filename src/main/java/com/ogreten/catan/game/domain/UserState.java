@@ -1,5 +1,6 @@
 package com.ogreten.catan.game.domain;
 
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.annotations.JdbcTypeCode;
@@ -36,5 +37,11 @@ public class UserState {
     private int numberOfWool;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    private Map<String, Object> buildings;
+    private List<Integer> roads;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<Integer> settlements;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<Integer> cities;
 }

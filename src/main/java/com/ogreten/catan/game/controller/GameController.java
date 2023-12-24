@@ -13,6 +13,7 @@ import com.ogreten.catan.game.domain.UserState;
 import com.ogreten.catan.game.repository.GameRepository;
 import com.ogreten.catan.game.repository.GameStateRepository;
 import com.ogreten.catan.game.repository.UserStateRepository;
+import com.ogreten.catan.game.schema.BuildInfo;
 import com.ogreten.catan.game.schema.RollInfo;
 import com.ogreten.catan.game.service.ResourceSettlementMapper;
 import com.ogreten.catan.game.service.SettlementRoadMapper;
@@ -39,6 +40,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
+import java.util.stream.Stream;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -174,12 +176,11 @@ public class GameController {
                         userState.setNumberOfWool(
                                         numberOfWool);
 
-                        userState.setBuildings(Map.of(
-                                        "road", List.of(
-                                                        randomUserRoadIndex),
-                                        "settlement", List.of(
-                                                        randomUserSettlementIndex),
-                                        "city", List.of()));
+                        userState.setRoads(List.of(
+                                        randomUserRoadIndex));
+                        userState.setSettlements(List.of(randomUserSettlementIndex));
+                        userState.setCities(List.of());
+
                         userStateRepository.save(userState);
                 }
 
@@ -287,10 +288,8 @@ public class GameController {
 
                 for (UserState userState : userStates) {
 
-                        final Map<String, Object> userBuildings = userState.getBuildings();
-                        final List<Integer> settlements = (List<Integer>) userBuildings.get("settlement");
-                        final List<Integer> cities = (List<Integer>) userBuildings.get("city");
-
+                        final List<Integer> settlements = userState.getSettlements();
+                        final List<Integer> cities = userState.getCities();
                         for (Integer settlement : settlements) {
                                 final List<Integer> resourceIndexesNearSettlement = ResourceSettlementMapper
                                                 .getInstance().getResourceIndexesNearSettlement(settlement);
@@ -388,6 +387,97 @@ public class GameController {
 
                 gameState.setTurnState(TurnState.BUILD);
 
+                List<Integer> othersSettlements = new ArrayList<>();
+                List<Integer> othersCities = new ArrayList<>();
+                List<Integer> othersRoads = new ArrayList<>();
+
+                for (UserState userState : userStates) {
+                        if (userState.getUser().getId().equals(gameState.getTurnUser().getId())) {
+                                continue;
+                        }
+
+                        final List<Integer> settlements = userState.getSettlements();
+                        final List<Integer> cities = userState.getCities();
+                        final List<Integer> roads = userState.getRoads();
+
+                        othersSettlements.addAll(settlements);
+                        othersCities.addAll(cities);
+                        othersRoads.addAll(roads);
+                }
+
+                final UserState turnUserState = userStateRepository
+                                .findByGameIdAndUserId(gameId, gameState.getTurnUser().getId()).get();
+
+                final List<Integer> turnUserSettlements = turnUserState.getSettlements();
+                final List<Integer> turnUserCities = turnUserState.getCities();
+                final List<Integer> turnUserRoads = turnUserState.getRoads();
+
+                List<Integer> availableRoadsForTurnUser = new ArrayList<>();
+
+                // for (Integer settlement : turnUserSettlements) {
+                // final List<Integer> roadsOfSettlement = SettlementRoadMapper.getInstance()
+                // .getRoadsOfVillage(settlement);
+
+                // for (Integer road : roadsOfSettlement) {
+                // if (!othersRoads.contains(road) && !turnUserRoads.contains(road)) {
+                // availableRoadsForTurnUser.add(road);
+                // }
+                // }
+                // }
+
+                final List<Integer> allSettlementPlacesOfTurnUser = new ArrayList<>();
+                for (Integer road : turnUserRoads) {
+                        final List<Integer> settlementsOfRoad = SettlementRoadMapper.getInstance()
+                                        .getVillageOfRoads(road);
+                        allSettlementPlacesOfTurnUser.addAll(settlementsOfRoad);
+                }
+
+                for (Integer settlement : allSettlementPlacesOfTurnUser) {
+                        final List<Integer> roadsOfSettlement = SettlementRoadMapper.getInstance()
+                                        .getRoadsOfVillage(settlement);
+
+                        for (Integer road : roadsOfSettlement) {
+                                if (!othersRoads.contains(road) && !turnUserRoads.contains(road)) {
+                                        availableRoadsForTurnUser.add(road);
+                                }
+                        }
+                }
+
+                List<Integer> availableSettlementsForTurnUser = new ArrayList<>();
+
+                List<Integer> allSettlementsAndCities = new ArrayList<>();
+
+                allSettlementsAndCities.addAll(othersSettlements);
+                allSettlementsAndCities.addAll(othersCities);
+                allSettlementsAndCities.addAll(turnUserSettlements);
+                allSettlementsAndCities.addAll(turnUserCities);
+
+                for (Integer road : turnUserRoads) {
+                        final List<Integer> settlementsOfRoad = SettlementRoadMapper.getInstance()
+                                        .getVillageOfRoads(road);
+
+                        for (Integer settlement : settlementsOfRoad) {
+                                if (!othersSettlements.contains(settlement) &&
+                                                !othersCities.contains(settlement) &&
+                                                !turnUserSettlements.contains(settlement)
+                                                && !turnUserCities.contains(settlement)
+
+                                                && SettlementRoadMapper.getInstance()
+                                                                .isSettlementAtLeastTwoRoadAwayToOtherSettlements(
+                                                                                settlement,
+                                                                                allSettlementsAndCities)) {
+                                        availableSettlementsForTurnUser.add(settlement);
+                                }
+                        }
+                }
+
+                List<Integer> availableCitiesForTurnUser = new ArrayList<>();
+                availableCitiesForTurnUser.addAll(turnUserSettlements);
+
+                gameState.setAvailableSettlementsForTurnUser(availableSettlementsForTurnUser);
+                gameState.setAvailableRoadsForTurnUser(availableRoadsForTurnUser);
+                gameState.setAvailableCitiesForTurnUser(availableCitiesForTurnUser);
+
                 gameStateRepository.save(gameState);
 
                 return ResponseEntity.ok().body(gameState);
@@ -422,4 +512,191 @@ public class GameController {
 
                 return ResponseEntity.ok().body(gameState);
         }
+
+        @PostMapping("/{gameId}/build-road")
+        public ResponseEntity<GameState> buildRoad(
+
+                        @Parameter(description = "Room id of the game to be started.", example = "1") @PathVariable int gameId,
+                        @RequestBody BuildInfo buildInfo) {
+
+                GameState gameState = gameStateRepository.findByGameId(gameId).get();
+
+                if (gameState.getTurnState() != TurnState.BUILD) {
+                        return ResponseEntity.badRequest().build();
+                }
+
+                final String userId = buildInfo.getUserId();
+
+                if (!gameState.getTurnUser().getId().equals(UUID.fromString(userId))) {
+                        return ResponseEntity.badRequest().build();
+                }
+
+                final UserState userState = userStateRepository.findByGameIdAndUserId(gameId, UUID.fromString(userId))
+                                .get();
+
+                final int numberOfLumber = userState.getNumberOfLumber();
+                final int numberOfBrick = userState.getNumberOfBrick();
+
+                if (numberOfLumber < 1 || numberOfBrick < 1) {
+                        return ResponseEntity.badRequest().build();
+                }
+
+                final int roadIndex = buildInfo.getIndex();
+
+                final List<Integer> availableRoadsForTurnUser = gameState.getAvailableRoadsForTurnUser();
+
+                if (!availableRoadsForTurnUser.contains(roadIndex)) {
+                        return ResponseEntity.badRequest().build();
+                }
+
+                final List<Integer> roads = userState.getRoads();
+                roads.add(roadIndex);
+
+                userState.setNumberOfLumber(numberOfLumber - 1);
+                userState.setNumberOfBrick(numberOfBrick - 1);
+
+                final List<Integer> updatedRoads = new ArrayList<>(roads);
+
+                userState.setRoads(updatedRoads);
+
+                userStateRepository.save(userState);
+
+                final List<Integer> updatedAvailableRoadsForTurnUser = new ArrayList<>(
+                                availableRoadsForTurnUser);
+                updatedAvailableRoadsForTurnUser.remove(Integer.valueOf(roadIndex));
+
+                gameState.setAvailableRoadsForTurnUser(updatedAvailableRoadsForTurnUser);
+
+                gameStateRepository.save(gameState);
+
+                return ResponseEntity.ok().body(gameState);
+        }
+
+        @PostMapping("/{gameId}/build-settlement")
+        public ResponseEntity<GameState> buildSettlement(
+
+                        @Parameter(description = "Room id of the game to be started.", example = "1") @PathVariable int gameId,
+                        @RequestBody BuildInfo buildInfo) {
+
+                GameState gameState = gameStateRepository.findByGameId(gameId).get();
+
+                if (gameState.getTurnState() != TurnState.BUILD) {
+                        return ResponseEntity.badRequest().build();
+                }
+
+                final String userId = buildInfo.getUserId();
+
+                if (!gameState.getTurnUser().getId().equals(UUID.fromString(userId))) {
+                        return ResponseEntity.badRequest().build();
+                }
+
+                final UserState userState = userStateRepository.findByGameIdAndUserId(gameId, UUID.fromString(userId))
+                                .get();
+
+                final int numberOfLumber = userState.getNumberOfLumber();
+                final int numberOfBrick = userState.getNumberOfBrick();
+                final int numberOfGrain = userState.getNumberOfGrain();
+                final int numberOfWool = userState.getNumberOfWool();
+
+                if (numberOfLumber < 1 || numberOfBrick < 1 || numberOfGrain < 1 || numberOfWool < 1) {
+                        return ResponseEntity.badRequest().build();
+                }
+
+                final int settlementIndex = buildInfo.getIndex();
+
+                final List<Integer> availableSettlementsForTurnUser = gameState.getAvailableSettlementsForTurnUser();
+
+                if (!availableSettlementsForTurnUser.contains(settlementIndex)) {
+                        return ResponseEntity.badRequest().build();
+                }
+
+                final List<Integer> settlements = userState.getSettlements();
+                settlements.add(settlementIndex);
+
+                userState.setNumberOfLumber(numberOfLumber - 1);
+                userState.setNumberOfBrick(numberOfBrick - 1);
+                userState.setNumberOfGrain(numberOfGrain - 1);
+                userState.setNumberOfWool(numberOfWool - 1);
+
+                final List<Integer> updatedSettlements = new ArrayList<>(settlements);
+
+                userState.setSettlements(updatedSettlements);
+
+                userStateRepository.save(userState);
+
+                final List<Integer> updatedAvailableSettlementsForTurnUser = new ArrayList<>(
+                                availableSettlementsForTurnUser);
+                updatedAvailableSettlementsForTurnUser.remove(Integer.valueOf(settlementIndex));
+
+                gameState.setAvailableRoadsForTurnUser(updatedAvailableSettlementsForTurnUser);
+
+                gameStateRepository.save(gameState);
+
+                return ResponseEntity.ok().body(gameState);
+        }
+
+        @PostMapping("/{gameId}/build-city")
+        public ResponseEntity<GameState> buildCity(
+
+                        @Parameter(description = "Room id of the game to be started.", example = "1") @PathVariable int gameId,
+                        @RequestBody BuildInfo buildInfo) {
+
+                GameState gameState = gameStateRepository.findByGameId(gameId).get();
+
+                if (gameState.getTurnState() != TurnState.BUILD) {
+                        return ResponseEntity.badRequest().build();
+                }
+
+                final String userId = buildInfo.getUserId();
+
+                if (!gameState.getTurnUser().getId().equals(UUID.fromString(userId))) {
+                        return ResponseEntity.badRequest().build();
+                }
+
+                final UserState userState = userStateRepository.findByGameIdAndUserId(gameId, UUID.fromString(userId))
+                                .get();
+
+                final int numberOfGrain = userState.getNumberOfGrain();
+                final int numberOfOre = userState.getNumberOfOre();
+
+                if (numberOfGrain < 2 || numberOfOre < 3) {
+                        return ResponseEntity.badRequest().build();
+                }
+
+                final int cityIndex = buildInfo.getIndex();
+
+                final List<Integer> availableCitiesForTurnUser = gameState.getAvailableCitiesForTurnUser();
+
+                if (!availableCitiesForTurnUser.contains(cityIndex)) {
+                        return ResponseEntity.badRequest().build();
+                }
+
+                final List<Integer> settlements = userState.getSettlements();
+                settlements.remove(settlements.indexOf(cityIndex));
+
+                final List<Integer> cities = userState.getCities();
+                cities.add(cityIndex);
+
+                userState.setNumberOfGrain(numberOfGrain - 2);
+                userState.setNumberOfOre(numberOfOre - 3);
+
+                final List<Integer> updatedSettlements = new ArrayList<>(settlements);
+                userState.setSettlements(updatedSettlements);
+
+                final List<Integer> updatedCities = new ArrayList<>(cities);
+                userState.setCities(updatedCities);
+
+                userStateRepository.save(userState);
+
+                final List<Integer> updatedAvailableCitiesForTurnUser = new ArrayList<>(
+                                availableCitiesForTurnUser);
+                updatedAvailableCitiesForTurnUser.remove(updatedAvailableCitiesForTurnUser.indexOf(cityIndex));
+
+                gameState.setAvailableCitiesForTurnUser(updatedAvailableCitiesForTurnUser);
+
+                gameStateRepository.save(gameState);
+
+                return ResponseEntity.ok().body(gameState);
+        }
+
 }
