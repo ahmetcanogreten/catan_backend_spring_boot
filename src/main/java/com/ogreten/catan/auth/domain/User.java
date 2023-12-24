@@ -33,6 +33,6 @@ public class User {
     private String lastName;
 
     @ColumnDefault("false")
-    private boolean isBot;
+    private boolean bot;
 
 }
