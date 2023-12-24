@@ -1,4 +1,4 @@
-package com.ogreten.catan.game.service;
+package com.ogreten.catan.game.util;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
