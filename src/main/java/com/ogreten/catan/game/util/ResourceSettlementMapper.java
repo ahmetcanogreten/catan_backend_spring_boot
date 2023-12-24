@@ -13,7 +13,7 @@ public class ResourceSettlementMapper {
     // Last index of road is 71
 
     private List<ResourceSettlementMapping> resourceSettlementMappins = new ArrayList<>();
-    private String fileName = "src/main/java/com/ogreten/catan/game/service/resource_to_settlement_map.csv";
+    private String fileName = "src/main/java/com/ogreten/catan/game/util/resource_to_settlement_map.csv";
 
     private static ResourceSettlementMapper instance;
 

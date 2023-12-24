@@ -9,6 +9,7 @@ import com.ogreten.catan.game.domain.GameState;
 import com.ogreten.catan.game.domain.UserState;
 import com.ogreten.catan.game.schema.BuildInfo;
 import com.ogreten.catan.game.schema.RollInfo;
+import com.ogreten.catan.game.schema.UserOptions;
 import com.ogreten.catan.game.service.GameService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -189,6 +190,18 @@ public class GameController {
                 gameService.buildCity(gameId, cityIndex, UUID.fromString(userId));
 
                 return ResponseEntity.ok().body("");
+
+        }
+
+        @GetMapping("/{gameId}/user-options")
+        public ResponseEntity<UserOptions> buildCity(
+
+                        @Parameter(description = "Room id of the game to be started.", example = "1") @PathVariable int gameId,
+                        @RequestParam String userId) {
+
+                UserOptions userOptions = gameService.getUserOptions(gameId, UUID.fromString(userId));
+
+                return ResponseEntity.ok().body(userOptions);
 
         }
 

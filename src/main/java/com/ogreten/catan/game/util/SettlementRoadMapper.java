@@ -13,7 +13,7 @@ public class SettlementRoadMapper {
     // Last index of road is 71
 
     private List<SettlementRoadMapping> settlementRoadMappings = new ArrayList<>();
-    private String fileName = "src/main/java/com/ogreten/catan/game/service/settlement_to_road_map.csv";
+    private String fileName = "src/main/java/com/ogreten/catan/game/util/settlement_to_road_map.csv";
 
     private static SettlementRoadMapper instance;
 

@@ -21,6 +21,7 @@ import com.ogreten.catan.game.domain.UserState;
 import com.ogreten.catan.game.repository.GameRepository;
 import com.ogreten.catan.game.repository.GameStateRepository;
 import com.ogreten.catan.game.repository.UserStateRepository;
+import com.ogreten.catan.game.schema.UserOptions;
 import com.ogreten.catan.game.util.ResourceSettlementMapper;
 import com.ogreten.catan.game.util.SettlementRoadMapper;
 import com.ogreten.catan.room.domain.Resource;
@@ -186,6 +187,96 @@ public class GameService {
         return userStates;
     }
 
+    public UserOptions getUserOptions(
+            int gameId, UUID userId) {
+
+        List<Integer> othersSettlements = new ArrayList<>();
+        List<Integer> othersCities = new ArrayList<>();
+        List<Integer> othersRoads = new ArrayList<>();
+
+        final List<UserState> userStates = userStateRepository.findByGameId(gameId);
+
+        for (UserState userState : userStates) {
+            if (userState.getUser().getId().equals(userId)) {
+                continue;
+            }
+
+            final List<Integer> settlements = userState.getSettlements();
+            final List<Integer> cities = userState.getCities();
+            final List<Integer> roads = userState.getRoads();
+
+            othersSettlements.addAll(settlements);
+            othersCities.addAll(cities);
+            othersRoads.addAll(roads);
+        }
+
+        final UserState turnUserState = userStateRepository
+                .findByGameIdAndUserId(gameId, userId).get();
+
+        final List<Integer> turnUserSettlements = turnUserState.getSettlements();
+        final List<Integer> turnUserCities = turnUserState.getCities();
+        final List<Integer> turnUserRoads = turnUserState.getRoads();
+
+        List<Integer> availableRoadsForTurnUser = new ArrayList<>();
+
+        final List<Integer> allSettlementPlacesOfTurnUser = new ArrayList<>();
+        for (Integer road : turnUserRoads) {
+            final List<Integer> settlementsOfRoad = SettlementRoadMapper.getInstance()
+                    .getVillageOfRoads(road);
+            allSettlementPlacesOfTurnUser.addAll(settlementsOfRoad);
+        }
+
+        for (Integer settlement : allSettlementPlacesOfTurnUser) {
+            final List<Integer> roadsOfSettlement = SettlementRoadMapper.getInstance()
+                    .getRoadsOfVillage(settlement);
+
+            for (Integer road : roadsOfSettlement) {
+                if (!othersRoads.contains(road) && !turnUserRoads.contains(road)) {
+                    availableRoadsForTurnUser.add(road);
+                }
+            }
+        }
+
+        List<Integer> availableSettlementsForTurnUser = new ArrayList<>();
+
+        List<Integer> allSettlementsAndCities = new ArrayList<>();
+
+        allSettlementsAndCities.addAll(othersSettlements);
+        allSettlementsAndCities.addAll(othersCities);
+        allSettlementsAndCities.addAll(turnUserSettlements);
+        allSettlementsAndCities.addAll(turnUserCities);
+
+        for (Integer road : turnUserRoads) {
+            final List<Integer> settlementsOfRoad = SettlementRoadMapper.getInstance()
+                    .getVillageOfRoads(road);
+
+            for (Integer settlement : settlementsOfRoad) {
+                if (!othersSettlements.contains(settlement) &&
+                        !othersCities.contains(settlement) &&
+                        !turnUserSettlements.contains(settlement)
+                        && !turnUserCities.contains(settlement)
+
+                        && SettlementRoadMapper.getInstance()
+                                .isSettlementAtLeastTwoRoadAwayToOtherSettlements(
+                                        settlement,
+                                        allSettlementsAndCities)) {
+                    availableSettlementsForTurnUser.add(settlement);
+                }
+            }
+        }
+
+        List<Integer> availableCitiesForTurnUser = new ArrayList<>();
+        availableCitiesForTurnUser.addAll(turnUserSettlements);
+
+        UserOptions userOptions = new UserOptions();
+
+        userOptions.setAvailableRoads(availableRoadsForTurnUser);
+        userOptions.setAvailableSettlements(availableSettlementsForTurnUser);
+        userOptions.setAvailableCities(availableCitiesForTurnUser);
+
+        return userOptions;
+    }
+
     public void rollDice(
             int gameId, int dice1, int dice2, UUID userId) {
         if (dice1 < 1 || dice1 > 6 || dice2 < 1 || dice2 > 6) {
@@ -324,97 +415,6 @@ public class GameService {
 
         gameState.setTurnState(TurnState.BUILD);
 
-        List<Integer> othersSettlements = new ArrayList<>();
-        List<Integer> othersCities = new ArrayList<>();
-        List<Integer> othersRoads = new ArrayList<>();
-
-        for (UserState userState : userStates) {
-            if (userState.getUser().getId().equals(gameState.getTurnUser().getId())) {
-                continue;
-            }
-
-            final List<Integer> settlements = userState.getSettlements();
-            final List<Integer> cities = userState.getCities();
-            final List<Integer> roads = userState.getRoads();
-
-            othersSettlements.addAll(settlements);
-            othersCities.addAll(cities);
-            othersRoads.addAll(roads);
-        }
-
-        final UserState turnUserState = userStateRepository
-                .findByGameIdAndUserId(gameId, gameState.getTurnUser().getId()).get();
-
-        final List<Integer> turnUserSettlements = turnUserState.getSettlements();
-        final List<Integer> turnUserCities = turnUserState.getCities();
-        final List<Integer> turnUserRoads = turnUserState.getRoads();
-
-        List<Integer> availableRoadsForTurnUser = new ArrayList<>();
-
-        // for (Integer settlement : turnUserSettlements) {
-        // final List<Integer> roadsOfSettlement = SettlementRoadMapper.getInstance()
-        // .getRoadsOfVillage(settlement);
-
-        // for (Integer road : roadsOfSettlement) {
-        // if (!othersRoads.contains(road) && !turnUserRoads.contains(road)) {
-        // availableRoadsForTurnUser.add(road);
-        // }
-        // }
-        // }
-
-        final List<Integer> allSettlementPlacesOfTurnUser = new ArrayList<>();
-        for (Integer road : turnUserRoads) {
-            final List<Integer> settlementsOfRoad = SettlementRoadMapper.getInstance()
-                    .getVillageOfRoads(road);
-            allSettlementPlacesOfTurnUser.addAll(settlementsOfRoad);
-        }
-
-        for (Integer settlement : allSettlementPlacesOfTurnUser) {
-            final List<Integer> roadsOfSettlement = SettlementRoadMapper.getInstance()
-                    .getRoadsOfVillage(settlement);
-
-            for (Integer road : roadsOfSettlement) {
-                if (!othersRoads.contains(road) && !turnUserRoads.contains(road)) {
-                    availableRoadsForTurnUser.add(road);
-                }
-            }
-        }
-
-        List<Integer> availableSettlementsForTurnUser = new ArrayList<>();
-
-        List<Integer> allSettlementsAndCities = new ArrayList<>();
-
-        allSettlementsAndCities.addAll(othersSettlements);
-        allSettlementsAndCities.addAll(othersCities);
-        allSettlementsAndCities.addAll(turnUserSettlements);
-        allSettlementsAndCities.addAll(turnUserCities);
-
-        for (Integer road : turnUserRoads) {
-            final List<Integer> settlementsOfRoad = SettlementRoadMapper.getInstance()
-                    .getVillageOfRoads(road);
-
-            for (Integer settlement : settlementsOfRoad) {
-                if (!othersSettlements.contains(settlement) &&
-                        !othersCities.contains(settlement) &&
-                        !turnUserSettlements.contains(settlement)
-                        && !turnUserCities.contains(settlement)
-
-                        && SettlementRoadMapper.getInstance()
-                                .isSettlementAtLeastTwoRoadAwayToOtherSettlements(
-                                        settlement,
-                                        allSettlementsAndCities)) {
-                    availableSettlementsForTurnUser.add(settlement);
-                }
-            }
-        }
-
-        List<Integer> availableCitiesForTurnUser = new ArrayList<>();
-        availableCitiesForTurnUser.addAll(turnUserSettlements);
-
-        gameState.setAvailableSettlementsForTurnUser(availableSettlementsForTurnUser);
-        gameState.setAvailableRoadsForTurnUser(availableRoadsForTurnUser);
-        gameState.setAvailableCitiesForTurnUser(availableCitiesForTurnUser);
-
         gameStateRepository.save(gameState);
     }
 
@@ -476,7 +476,8 @@ public class GameService {
             return;
         }
 
-        final List<Integer> availableRoadsForTurnUser = gameState.getAvailableRoadsForTurnUser();
+        final UserOptions userOptions = getUserOptions(gameId, userId);
+        final List<Integer> availableRoadsForTurnUser = userOptions.getAvailableRoads();
 
         if (!availableRoadsForTurnUser.contains(roadIndex)) {
             // TODO: Throw exception
@@ -494,14 +495,6 @@ public class GameService {
         userState.setRoads(updatedRoads);
 
         userStateRepository.save(userState);
-
-        final List<Integer> updatedAvailableRoadsForTurnUser = new ArrayList<>(
-                availableRoadsForTurnUser);
-        updatedAvailableRoadsForTurnUser.remove(Integer.valueOf(roadIndex));
-
-        gameState.setAvailableRoadsForTurnUser(updatedAvailableRoadsForTurnUser);
-
-        gameStateRepository.save(gameState);
     }
 
     public void buildSettlement(
@@ -531,7 +524,8 @@ public class GameService {
             return;
         }
 
-        final List<Integer> availableSettlementsForTurnUser = gameState.getAvailableSettlementsForTurnUser();
+        final UserOptions userOptions = getUserOptions(gameId, userId);
+        final List<Integer> availableSettlementsForTurnUser = userOptions.getAvailableSettlements();
 
         if (!availableSettlementsForTurnUser.contains(settlementIndex)) {
             // TODO: Throw exception
@@ -551,14 +545,6 @@ public class GameService {
         userState.setSettlements(updatedSettlements);
 
         userStateRepository.save(userState);
-
-        final List<Integer> updatedAvailableSettlementsForTurnUser = new ArrayList<>(
-                availableSettlementsForTurnUser);
-        updatedAvailableSettlementsForTurnUser.remove(Integer.valueOf(settlementIndex));
-
-        gameState.setAvailableRoadsForTurnUser(updatedAvailableSettlementsForTurnUser);
-
-        gameStateRepository.save(gameState);
 
     }
 
@@ -588,7 +574,9 @@ public class GameService {
             return;
         }
 
-        final List<Integer> availableCitiesForTurnUser = gameState.getAvailableCitiesForTurnUser();
+        final UserOptions userOptions = getUserOptions(gameId, userId);
+
+        final List<Integer> availableCitiesForTurnUser = userOptions.getAvailableCities();
 
         if (!availableCitiesForTurnUser.contains(cityIndex)) {
             // TODO: Throw exception
@@ -611,14 +599,6 @@ public class GameService {
         userState.setCities(updatedCities);
 
         userStateRepository.save(userState);
-
-        final List<Integer> updatedAvailableCitiesForTurnUser = new ArrayList<>(
-                availableCitiesForTurnUser);
-        updatedAvailableCitiesForTurnUser.remove(updatedAvailableCitiesForTurnUser.indexOf(cityIndex));
-
-        gameState.setAvailableCitiesForTurnUser(updatedAvailableCitiesForTurnUser);
-
-        gameStateRepository.save(gameState);
     }
 
 }
