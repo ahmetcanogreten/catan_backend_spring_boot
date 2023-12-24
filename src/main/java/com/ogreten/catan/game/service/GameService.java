@@ -3,8 +3,10 @@ package com.ogreten.catan.game.service;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -82,18 +84,20 @@ public class GameService {
 
         // Create user states
         for (User user : users) {
-            int randomUserSettlementIndex = (new Random().nextInt(54));
-            while (!SettlementRoadMapper.getInstance().isSettlementAtLeastTwoRoadAwayToOtherSettlements(
-                    randomUserSettlementIndex, usersSettlementIndexes)) {
-                randomUserSettlementIndex = (new Random().nextInt(54));
-            }
-            usersSettlementIndexes.add(randomUserSettlementIndex);
+            // int randomUserSettlementIndex = (new Random().nextInt(54));
+            // while
+            // (!SettlementRoadMapper.getInstance().isSettlementAtLeastTwoRoadAwayToOtherSettlements(
+            // randomUserSettlementIndex, usersSettlementIndexes)) {
+            // randomUserSettlementIndex = (new Random().nextInt(54));
+            // }
+            // usersSettlementIndexes.add(randomUserSettlementIndex);
 
-            final List<Integer> roadsOfRandomUserSettlementIndex = SettlementRoadMapper.getInstance()
-                    .getRoadsOfVillage(randomUserSettlementIndex);
+            // final List<Integer> roadsOfRandomUserSettlementIndex =
+            // SettlementRoadMapper.getInstance()
+            // .getRoadsOfVillage(randomUserSettlementIndex);
 
-            final int randomUserRoadIndex = roadsOfRandomUserSettlementIndex
-                    .get(new Random().nextInt(roadsOfRandomUserSettlementIndex.size()));
+            // final int randomUserRoadIndex = roadsOfRandomUserSettlementIndex
+            // .get(new Random().nextInt(roadsOfRandomUserSettlementIndex.size()));
 
             int numberOfBrick = 0;
             int numberOfLumber = 0;
@@ -101,34 +105,35 @@ public class GameService {
             int numberOfGrain = 0;
             int numberOfWool = 0;
 
-            final List<Integer> resourceIndexesNearSettlement = ResourceSettlementMapper.getInstance()
-                    .getResourceIndexesNearSettlement(randomUserSettlementIndex);
+            // final List<Integer> resourceIndexesNearSettlement =
+            // ResourceSettlementMapper.getInstance()
+            // .getResourceIndexesNearSettlement(randomUserSettlementIndex);
 
-            for (Integer resourceIndex : resourceIndexesNearSettlement) {
-                Resource resource = roomResources.stream()
-                        .filter(eachResource -> eachResource.getIndex() == resourceIndex)
-                        .findFirst().get();
+            // for (Integer resourceIndex : resourceIndexesNearSettlement) {
+            // Resource resource = roomResources.stream()
+            // .filter(eachResource -> eachResource.getIndex() == resourceIndex)
+            // .findFirst().get();
 
-                switch (resource.getType()) {
-                    case "hills":
-                        numberOfBrick += 1;
-                        break;
-                    case "forest":
-                        numberOfLumber += 1;
-                        break;
-                    case "mountains":
-                        numberOfOre += 1;
-                        break;
-                    case "fields":
-                        numberOfGrain += 1;
-                        break;
-                    case "pasture":
-                        numberOfWool += 1;
-                        break;
-                    default:
-                        break;
-                }
-            }
+            // switch (resource.getType()) {
+            // case "hills":
+            // numberOfBrick += 1;
+            // break;
+            // case "forest":
+            // numberOfLumber += 1;
+            // break;
+            // case "mountains":
+            // numberOfOre += 1;
+            // break;
+            // case "fields":
+            // numberOfGrain += 1;
+            // break;
+            // case "pasture":
+            // numberOfWool += 1;
+            // break;
+            // default:
+            // break;
+            // }
+            // }
 
             UserState userState = new UserState();
             userState.setGame(game);
@@ -143,10 +148,14 @@ public class GameService {
             userState.setNumberOfWool(
                     numberOfWool);
 
-            userState.setRoads(List.of(
-                    randomUserRoadIndex));
-            userState.setSettlements(List.of(randomUserSettlementIndex));
+            userState.setRoads(List.of());
+            userState.setSettlements(List.of());
             userState.setCities(List.of());
+
+            // userState.setRoads(List.of(
+            // randomUserRoadIndex));
+            // userState.setSettlements(List.of(randomUserSettlementIndex));
+            // userState.setCities(List.of());
 
             userStateRepository.save(userState);
         }
@@ -160,7 +169,7 @@ public class GameService {
         gameState.setGame(game);
         gameState.setTurnUser(turnUser);
         gameState.setTurnState(
-                TurnState.ROLL);
+                TurnState.CHOOSE_1);
         gameStateRepository.save(gameState);
 
         return Optional.of(game);
@@ -217,15 +226,17 @@ public class GameService {
         final List<Integer> turnUserCities = turnUserState.getCities();
         final List<Integer> turnUserRoads = turnUserState.getRoads();
 
+        // Get available roads for turn user
         List<Integer> availableRoadsForTurnUser = new ArrayList<>();
 
-        final List<Integer> allSettlementPlacesOfTurnUser = new ArrayList<>();
+        List<Integer> allSettlementPlacesOfTurnUser = new ArrayList<>();
         for (Integer road : turnUserRoads) {
             final List<Integer> settlementsOfRoad = SettlementRoadMapper.getInstance()
                     .getVillageOfRoads(road);
             allSettlementPlacesOfTurnUser.addAll(settlementsOfRoad);
         }
 
+        allSettlementPlacesOfTurnUser.addAll(turnUserSettlements);
         for (Integer settlement : allSettlementPlacesOfTurnUser) {
             final List<Integer> roadsOfSettlement = SettlementRoadMapper.getInstance()
                     .getRoadsOfVillage(settlement);
@@ -237,8 +248,7 @@ public class GameService {
             }
         }
 
-        List<Integer> availableSettlementsForTurnUser = new ArrayList<>();
-
+        // Get available settlements for turn user
         List<Integer> allSettlementsAndCities = new ArrayList<>();
 
         allSettlementsAndCities.addAll(othersSettlements);
@@ -246,32 +256,17 @@ public class GameService {
         allSettlementsAndCities.addAll(turnUserSettlements);
         allSettlementsAndCities.addAll(turnUserCities);
 
-        for (Integer road : turnUserRoads) {
-            final List<Integer> settlementsOfRoad = SettlementRoadMapper.getInstance()
-                    .getVillageOfRoads(road);
+        List<Integer> availableSettlementsForTurnUser = SettlementRoadMapper.getInstance()
+                .getAllVillagesWhileOtherVillages(
+                        allSettlementsAndCities);
 
-            for (Integer settlement : settlementsOfRoad) {
-                if (!othersSettlements.contains(settlement) &&
-                        !othersCities.contains(settlement) &&
-                        !turnUserSettlements.contains(settlement)
-                        && !turnUserCities.contains(settlement)
-
-                        && SettlementRoadMapper.getInstance()
-                                .isSettlementAtLeastTwoRoadAwayToOtherSettlements(
-                                        settlement,
-                                        allSettlementsAndCities)) {
-                    availableSettlementsForTurnUser.add(settlement);
-                }
-            }
-        }
-
-        List<Integer> availableCitiesForTurnUser = new ArrayList<>();
-        availableCitiesForTurnUser.addAll(turnUserSettlements);
+        // Get available cities for turn user
+        List<Integer> availableCitiesForTurnUser = new ArrayList<>(turnUserSettlements);
 
         UserOptions userOptions = new UserOptions();
 
-        userOptions.setAvailableRoads(availableRoadsForTurnUser);
         userOptions.setAvailableSettlements(availableSettlementsForTurnUser);
+        userOptions.setAvailableRoads(availableRoadsForTurnUser);
         userOptions.setAvailableCities(availableCitiesForTurnUser);
 
         return userOptions;
@@ -599,6 +594,318 @@ public class GameService {
         userState.setCities(updatedCities);
 
         userStateRepository.save(userState);
+    }
+
+    public void chooseSettlementAndRoadForBot(
+            int gameId, UUID userId) {
+
+        GameState gameState = gameStateRepository.findByGameId(gameId).get();
+
+        if (gameState.getTurnState() != TurnState.CHOOSE_1 && gameState.getTurnState() != TurnState.CHOOSE_2) {
+            // TODO : Throw exception
+            return;
+        }
+
+        if (!gameState.getTurnUser().getId().equals(userId)) {
+            // TODO : Throw exception
+            return;
+        }
+
+        List<Integer> allSettlements = new ArrayList<>();
+
+        final List<UserState> userStates = userStateRepository.findByGameId(gameId);
+
+        for (UserState userState : userStates) {
+            final List<Integer> settlements = userState.getSettlements();
+            allSettlements.addAll(settlements);
+        }
+
+        List<Integer> availableSettlementsForTurnUser = SettlementRoadMapper.getInstance()
+                .getAllVillagesWhileOtherVillages(
+                        allSettlements);
+
+        final int randomSettlementIndex = availableSettlementsForTurnUser.get(
+                new Random().nextInt(availableSettlementsForTurnUser.size()));
+
+        final List<Integer> availableRoadsForTurnUser = SettlementRoadMapper.getInstance()
+                .getRoadsOfVillage(randomSettlementIndex);
+
+        final int randomRoadIndex = availableRoadsForTurnUser.get(
+                new Random().nextInt(availableRoadsForTurnUser.size()));
+
+        final UserState userState = userStateRepository.findByGameIdAndUserId(gameId, userId)
+                .get();
+
+        final List<Integer> settlements = userState.getSettlements();
+        settlements.add(randomSettlementIndex);
+
+        final List<Integer> roads = userState.getRoads();
+        roads.add(randomRoadIndex);
+
+        userState.setSettlements(settlements);
+        userState.setRoads(roads);
+
+        final int whichIndexAmI = gameState.getGame().getUsersCycle().indexOf(userId.toString());
+
+        final int indexOfNextTurnUser = (whichIndexAmI + 1) % gameState.getGame().getUsersCycle().size();
+
+        final String idOfNextTurnUser = gameState.getGame().getUsersCycle().get(indexOfNextTurnUser);
+
+        final User nextTurnUser = userRepository.findById(UUID.fromString(idOfNextTurnUser)).get();
+
+        gameState.setTurnUser(nextTurnUser);
+
+        if (gameState.getTurnState() == TurnState.CHOOSE_2) {
+            int numberOfBrick = 0;
+            int numberOfLumber = 0;
+            int numberOfOre = 0;
+            int numberOfGrain = 0;
+            int numberOfWool = 0;
+
+            final List<Integer> resourceIndexesNearSettlement = ResourceSettlementMapper.getInstance()
+                    .getResourceIndexesNearSettlement(randomSettlementIndex);
+
+            final Game game = gameState.getGame();
+
+            for (Integer resourceIndex : resourceIndexesNearSettlement) {
+                Resource resource = game.getResources().stream()
+                        .filter(eachResource -> eachResource.getIndex() == resourceIndex)
+                        .findFirst().get();
+
+                switch (resource.getType()) {
+                    case "hills":
+                        numberOfBrick += 1;
+                        break;
+                    case "forest":
+                        numberOfLumber += 1;
+                        break;
+                    case "mountains":
+                        numberOfOre += 1;
+                        break;
+                    case "fields":
+                        numberOfGrain += 1;
+                        break;
+                    case "pasture":
+                        numberOfWool += 1;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            userState.setNumberOfBrick(numberOfBrick);
+            userState.setNumberOfLumber(
+                    numberOfLumber);
+            userState.setNumberOfOre(
+                    numberOfOre);
+            userState.setNumberOfGrain(
+                    numberOfGrain);
+            userState.setNumberOfWool(
+                    numberOfWool);
+
+            userStateRepository.save(userState);
+        }
+
+        if (whichIndexAmI == gameState.getGame().getUsersCycle().size() - 1) {
+            if (gameState.getTurnState() == TurnState.CHOOSE_1) {
+                gameState.setTurnState(TurnState.CHOOSE_2);
+            } else {
+                gameState.setTurnState(TurnState.ROLL);
+
+            }
+        }
+
+        gameStateRepository.save(gameState);
+        userStateRepository.save(userState);
+
+    }
+
+    public Map<Integer, List<Integer>> getAvailableSettlementsAndRoadsToChoose(
+            int gameId, UUID userId) {
+
+        GameState gameState = gameStateRepository.findByGameId(gameId).get();
+
+        if (gameState.getTurnState() != TurnState.CHOOSE_1 && gameState.getTurnState() != TurnState.CHOOSE_2) {
+            // TODO : Throw exception
+            return Map.of();
+        }
+
+        if (!gameState.getTurnUser().getId().equals(userId)) {
+            // TODO : Throw exception
+            return Map.of();
+        }
+
+        List<Integer> allBuiltSettlements = new ArrayList<>();
+
+        final List<UserState> userStates = userStateRepository.findByGameId(gameId);
+
+        for (UserState userState : userStates) {
+            final List<Integer> settlements = userState.getSettlements();
+            allBuiltSettlements.addAll(settlements);
+        }
+
+        List<Integer> availableSettlementsForTurnUser = SettlementRoadMapper.getInstance()
+                .getAllVillagesWhileOtherVillages(
+                        allBuiltSettlements);
+
+        Map<Integer, List<Integer>> availableSettlementsForTurnUserWithRoads = new HashMap<>();
+
+        for (Integer settlement : availableSettlementsForTurnUser) {
+            final List<Integer> roadsOfSettlement = SettlementRoadMapper.getInstance()
+                    .getRoadsOfVillage(settlement);
+
+            availableSettlementsForTurnUserWithRoads.put(settlement, roadsOfSettlement);
+        }
+
+        return availableSettlementsForTurnUserWithRoads;
+    }
+
+    public void chooseSettlement(
+            int gameId, UUID userId, int settlementIndex) {
+
+        GameState gameState = gameStateRepository.findByGameId(gameId).get();
+
+        if (gameState.getTurnState() != TurnState.CHOOSE_1 && gameState.getTurnState() != TurnState.CHOOSE_2) {
+            // TODO : Throw exception
+            return;
+        }
+
+        if (!gameState.getTurnUser().getId().equals(userId)) {
+            // TODO : Throw exception
+            return;
+        }
+
+        List<Integer> allSettlements = new ArrayList<>();
+
+        final List<UserState> userStates = userStateRepository.findByGameId(gameId);
+
+        for (UserState userState : userStates) {
+            final List<Integer> settlements = userState.getSettlements();
+            allSettlements.addAll(settlements);
+        }
+
+        List<Integer> availableSettlementsForTurnUser = SettlementRoadMapper.getInstance()
+                .getAllVillagesWhileOtherVillages(
+                        allSettlements);
+
+        if (!availableSettlementsForTurnUser.contains(settlementIndex)) {
+            // TODO : Throw exception
+            return;
+        }
+
+        final UserState userState = userStateRepository.findByGameIdAndUserId(gameId, userId)
+                .get();
+
+        final List<Integer> settlements = userState.getSettlements();
+        settlements.add(settlementIndex);
+
+        userState.setSettlements(settlements);
+
+        if (gameState.getTurnState() == TurnState.CHOOSE_2) {
+
+            int numberOfBrick = 0;
+            int numberOfLumber = 0;
+            int numberOfOre = 0;
+            int numberOfGrain = 0;
+            int numberOfWool = 0;
+
+            final List<Integer> resourceIndexesNearSettlement = ResourceSettlementMapper.getInstance()
+                    .getResourceIndexesNearSettlement(settlementIndex);
+
+            final Game game = gameState.getGame();
+
+            for (Integer resourceIndex : resourceIndexesNearSettlement) {
+                Resource resource = game.getResources().stream()
+                        .filter(eachResource -> eachResource.getIndex() == resourceIndex)
+                        .findFirst().get();
+
+                switch (resource.getType()) {
+                    case "hills":
+                        numberOfBrick += 1;
+                        break;
+                    case "forest":
+                        numberOfLumber += 1;
+                        break;
+                    case "mountains":
+                        numberOfOre += 1;
+                        break;
+                    case "fields":
+                        numberOfGrain += 1;
+                        break;
+                    case "pasture":
+                        numberOfWool += 1;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            userState.setNumberOfBrick(numberOfBrick);
+            userState.setNumberOfLumber(
+                    numberOfLumber);
+            userState.setNumberOfOre(
+                    numberOfOre);
+            userState.setNumberOfGrain(
+                    numberOfGrain);
+            userState.setNumberOfWool(
+                    numberOfWool);
+        }
+
+        userStateRepository.save(userState);
+    }
+
+    public void chooseRoad(
+            int gameId, UUID userId, int roadIndex) {
+
+        GameState gameState = gameStateRepository.findByGameId(gameId).get();
+
+        if (gameState.getTurnState() != TurnState.CHOOSE_1 && gameState.getTurnState() != TurnState.CHOOSE_2) {
+            // TODO : Throw exception
+            return;
+        }
+
+        if (!gameState.getTurnUser().getId().equals(userId)) {
+            // TODO : Throw exception
+            return;
+        }
+
+        UserOptions userOptions = getUserOptions(gameId, userId);
+
+        final List<Integer> availableRoadsForTurnUser = userOptions.getAvailableRoads();
+
+        if (!availableRoadsForTurnUser.contains(roadIndex)) {
+            // TODO : Throw exception
+            return;
+        }
+
+        final UserState userState = userStateRepository.findByGameIdAndUserId(gameId, userId)
+                .get();
+
+        final List<Integer> roads = userState.getRoads();
+        roads.add(roadIndex);
+
+        userState.setRoads(roads);
+
+        final int whichIndexAmI = gameState.getGame().getUsersCycle().indexOf(userId.toString());
+
+        final int indexOfNextTurnUser = (whichIndexAmI + 1) %
+                gameState.getGame().getUsersCycle().size();
+
+        final String idOfNextTurnUser = gameState.getGame().getUsersCycle().get(indexOfNextTurnUser);
+
+        final User nextTurnUser = userRepository.findById(UUID.fromString(idOfNextTurnUser)).get();
+
+        gameState.setTurnUser(nextTurnUser);
+
+        if (whichIndexAmI == gameState.getGame().getUsersCycle().size() - 1) {
+            if (gameState.getTurnState() == TurnState.CHOOSE_1) {
+                gameState.setTurnState(TurnState.CHOOSE_2);
+            } else {
+                gameState.setTurnState(TurnState.ROLL);
+            }
+        }
+
+        gameStateRepository.save(gameState);
     }
 
 }

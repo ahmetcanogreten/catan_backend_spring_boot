@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.transaction.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -203,6 +204,50 @@ public class GameController {
 
                 return ResponseEntity.ok().body(userOptions);
 
+        }
+
+        @PostMapping("/{gameId}/choose-settlement-and-road-for-bot")
+        public ResponseEntity<String> chooseSettlementAndRoadForBot(
+                        @PathVariable int gameId,
+                        @RequestParam UUID userId) {
+
+                gameService.chooseSettlementAndRoadForBot(gameId, userId);
+
+                return ResponseEntity.ok().body("");
+        }
+
+        @GetMapping("/{gameId}/available-settlements-and-roads-to-choose")
+        public ResponseEntity<Map<Integer, List<Integer>>> getAvailableSettlementsAndRoadsToChoose(
+                        @PathVariable int gameId,
+                        @RequestParam UUID userId) {
+
+                Map<Integer, List<Integer>> availableSettlementsAndRoadsToChoose = gameService
+                                .getAvailableSettlementsAndRoadsToChoose(gameId,
+                                                userId);
+
+                return ResponseEntity.ok().body(availableSettlementsAndRoadsToChoose);
+        }
+
+        @PostMapping("/{gameId}/choose-settlement")
+        public ResponseEntity<String> chooseSettlement(
+                        @PathVariable int gameId,
+                        @RequestParam UUID userId,
+                        @RequestParam int settlementIndex) {
+
+                gameService.chooseSettlement(gameId, userId, settlementIndex);
+
+                return ResponseEntity.ok().body("");
+        }
+
+        @PostMapping("/{gameId}/choose-road")
+        public ResponseEntity<String> chooseRoad(
+                        @PathVariable int gameId,
+                        @RequestParam UUID userId,
+                        @RequestParam int roadIndex) {
+
+                gameService.chooseRoad(gameId, userId, roadIndex);
+
+                return ResponseEntity.ok().body("");
         }
 
 }

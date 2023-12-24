@@ -4,6 +4,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 import com.ogreten.catan.game.domain.SettlementRoadMapping;
 
@@ -74,6 +76,30 @@ public class SettlementRoadMapper {
         }
         return true;
 
+    }
+
+    public List<Integer> getAllVillages() {
+        Set<Integer> villages = new HashSet<>();
+        for (SettlementRoadMapping villageRoadMapping : settlementRoadMappings) {
+            villages.add(villageRoadMapping.getSettlementIndex());
+        }
+
+        return new ArrayList<>(villages);
+    }
+
+    public List<Integer> getAllVillagesWhileOtherVillages(
+            List<Integer> otherVillages) {
+        Set<Integer> villages = new HashSet<>();
+
+        List<Integer> allVillages = getAllVillages();
+
+        for (Integer village : allVillages) {
+            if (isSettlementAtLeastTwoRoadAwayToOtherSettlements(village, otherVillages)) {
+                villages.add(village);
+            }
+        }
+
+        return new ArrayList<>(villages);
     }
 
 }
