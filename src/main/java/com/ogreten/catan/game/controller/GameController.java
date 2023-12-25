@@ -11,6 +11,7 @@ import com.ogreten.catan.game.domain.UserState;
 import com.ogreten.catan.game.schema.BuildInfo;
 import com.ogreten.catan.game.schema.RollInfo;
 import com.ogreten.catan.game.schema.UserOptions;
+import com.ogreten.catan.game.schema.UserWithInGamePoints;
 import com.ogreten.catan.game.service.GameService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -258,6 +259,15 @@ public class GameController {
                 List<GameLog> gameLogs = gameService.getGameLogs(gameId);
 
                 return ResponseEntity.ok().body(gameLogs);
+        }
+
+        @GetMapping("/{gameId}/users-points")
+        public ResponseEntity<List<UserWithInGamePoints>> getUsersPoints(
+                        @PathVariable int gameId) {
+
+                List<UserWithInGamePoints> usersPoints = gameService.getUsersPoints(gameId);
+
+                return ResponseEntity.ok().body(usersPoints);
         }
 
 }

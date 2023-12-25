@@ -26,6 +26,7 @@ import com.ogreten.catan.game.repository.GameRepository;
 import com.ogreten.catan.game.repository.GameStateRepository;
 import com.ogreten.catan.game.repository.UserStateRepository;
 import com.ogreten.catan.game.schema.UserOptions;
+import com.ogreten.catan.game.schema.UserWithInGamePoints;
 import com.ogreten.catan.game.util.ResourceSettlementMapper;
 import com.ogreten.catan.game.util.SettlementRoadMapper;
 import com.ogreten.catan.room.domain.Resource;
@@ -948,6 +949,33 @@ public class GameService {
 
     public List<GameLog> getGameLogs(int gameId) {
         return gameLogRepository.findByGameId(gameId);
+    }
+
+    public List<UserWithInGamePoints> getUsersPoints(int gameId) {
+
+        final List<UserState> userStates = userStateRepository.findByGameId(gameId);
+
+        List<UserWithInGamePoints> usersWithPoints = new ArrayList<>();
+
+        for (UserState userState : userStates) {
+            UserWithInGamePoints userWithPoints = new UserWithInGamePoints();
+            userWithPoints.setId(userState.getUser().getId());
+
+            int points = 0;
+
+            final List<Integer> settlements = userState.getSettlements();
+            final List<Integer> cities = userState.getCities();
+            final List<Integer> roads = userState.getRoads();
+
+            points += settlements.size();
+            points += 2 * cities.size();
+            // TODO : Add longest road points
+
+            userWithPoints.setPoints(points);
+            usersWithPoints.add(userWithPoints);
+        }
+
+        return usersWithPoints;
     }
 
 }
