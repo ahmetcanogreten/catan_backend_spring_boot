@@ -217,9 +217,22 @@ public class GameService {
         allSettlementsAndCities.addAll(turnUserSettlements);
         allSettlementsAndCities.addAll(turnUserCities);
 
-        List<Integer> availableSettlementsForTurnUser = SettlementRoadMapper.getInstance()
+        List<Integer> mayBeAvailableSettlementsForTurnUser = SettlementRoadMapper.getInstance()
                 .getAllVillagesWhileOtherVillages(
                         allSettlementsAndCities);
+
+        List<Integer> availableSettlementsForTurnUser = new ArrayList<>();
+
+        for (Integer eachRoad : turnUserRoads) {
+            final List<Integer> settlementsOfRoad = SettlementRoadMapper.getInstance()
+                    .getVillageOfRoads(eachRoad);
+
+            for (Integer eachSettlement : settlementsOfRoad) {
+                if (mayBeAvailableSettlementsForTurnUser.contains(eachSettlement)) {
+                    availableSettlementsForTurnUser.add(eachSettlement);
+                }
+            }
+        }
 
         // Get available cities for turn user
         List<Integer> availableCitiesForTurnUser = new ArrayList<>(turnUserSettlements);
