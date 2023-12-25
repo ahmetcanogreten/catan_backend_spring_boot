@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ogreten.catan.game.domain.Game;
+import com.ogreten.catan.game.domain.GameLog;
 import com.ogreten.catan.game.domain.GameState;
 import com.ogreten.catan.game.domain.UserState;
 import com.ogreten.catan.game.schema.BuildInfo;
@@ -248,6 +249,15 @@ public class GameController {
                 gameService.chooseRoad(gameId, userId, roadIndex);
 
                 return ResponseEntity.ok().body("");
+        }
+
+        @GetMapping("/{gameId}/logs")
+        public ResponseEntity<List<GameLog>> getGameLogs(
+                        @PathVariable int gameId) {
+
+                List<GameLog> gameLogs = gameService.getGameLogs(gameId);
+
+                return ResponseEntity.ok().body(gameLogs);
         }
 
 }

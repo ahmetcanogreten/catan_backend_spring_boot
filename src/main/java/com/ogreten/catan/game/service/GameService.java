@@ -17,9 +17,11 @@ import org.springframework.stereotype.Service;
 import com.ogreten.catan.auth.domain.User;
 import com.ogreten.catan.auth.repository.UserRepository;
 import com.ogreten.catan.game.domain.Game;
+import com.ogreten.catan.game.domain.GameLog;
 import com.ogreten.catan.game.domain.GameState;
 import com.ogreten.catan.game.domain.TurnState;
 import com.ogreten.catan.game.domain.UserState;
+import com.ogreten.catan.game.repository.GameLogRepository;
 import com.ogreten.catan.game.repository.GameRepository;
 import com.ogreten.catan.game.repository.GameStateRepository;
 import com.ogreten.catan.game.repository.UserStateRepository;
@@ -38,15 +40,18 @@ public class GameService {
     GameStateRepository gameStateRepository;
     UserStateRepository userStateRepository;
     UserRepository userRepository;
+    GameLogRepository gameLogRepository;
 
     public GameService(RoomRepository roomRepository, GameRepository gameRepository,
             GameStateRepository gameStateRepository, UserStateRepository userStateRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            GameLogRepository gameLogRepository) {
         this.roomRepository = roomRepository;
         this.gameRepository = gameRepository;
         this.gameStateRepository = gameStateRepository;
         this.userStateRepository = userStateRepository;
         this.userRepository = userRepository;
+        this.gameLogRepository = gameLogRepository;
     }
 
     public Optional<Game> createGame(int roomId) {
@@ -84,56 +89,12 @@ public class GameService {
 
         // Create user states
         for (User user : users) {
-            // int randomUserSettlementIndex = (new Random().nextInt(54));
-            // while
-            // (!SettlementRoadMapper.getInstance().isSettlementAtLeastTwoRoadAwayToOtherSettlements(
-            // randomUserSettlementIndex, usersSettlementIndexes)) {
-            // randomUserSettlementIndex = (new Random().nextInt(54));
-            // }
-            // usersSettlementIndexes.add(randomUserSettlementIndex);
-
-            // final List<Integer> roadsOfRandomUserSettlementIndex =
-            // SettlementRoadMapper.getInstance()
-            // .getRoadsOfVillage(randomUserSettlementIndex);
-
-            // final int randomUserRoadIndex = roadsOfRandomUserSettlementIndex
-            // .get(new Random().nextInt(roadsOfRandomUserSettlementIndex.size()));
 
             int numberOfBrick = 0;
             int numberOfLumber = 0;
             int numberOfOre = 0;
             int numberOfGrain = 0;
             int numberOfWool = 0;
-
-            // final List<Integer> resourceIndexesNearSettlement =
-            // ResourceSettlementMapper.getInstance()
-            // .getResourceIndexesNearSettlement(randomUserSettlementIndex);
-
-            // for (Integer resourceIndex : resourceIndexesNearSettlement) {
-            // Resource resource = roomResources.stream()
-            // .filter(eachResource -> eachResource.getIndex() == resourceIndex)
-            // .findFirst().get();
-
-            // switch (resource.getType()) {
-            // case "hills":
-            // numberOfBrick += 1;
-            // break;
-            // case "forest":
-            // numberOfLumber += 1;
-            // break;
-            // case "mountains":
-            // numberOfOre += 1;
-            // break;
-            // case "fields":
-            // numberOfGrain += 1;
-            // break;
-            // case "pasture":
-            // numberOfWool += 1;
-            // break;
-            // default:
-            // break;
-            // }
-            // }
 
             UserState userState = new UserState();
             userState.setGame(game);
@@ -152,11 +113,6 @@ public class GameService {
             userState.setSettlements(List.of());
             userState.setCities(List.of());
 
-            // userState.setRoads(List.of(
-            // randomUserRoadIndex));
-            // userState.setSettlements(List.of(randomUserSettlementIndex));
-            // userState.setCities(List.of());
-
             userStateRepository.save(userState);
         }
 
@@ -171,6 +127,11 @@ public class GameService {
         gameState.setTurnState(
                 TurnState.CHOOSE_1);
         gameStateRepository.save(gameState);
+
+        GameLog gameLog = new GameLog();
+        gameLog.setGame(game);
+        gameLog.setLog(room.getOwner().getFirstName() + " started the game.");
+        gameLogRepository.save(gameLog);
 
         return Optional.of(game);
     }
@@ -298,6 +259,13 @@ public class GameService {
             return;
         }
 
+        GameLog gameLogDice = new GameLog();
+        Game game = gameState.getGame();
+        gameLogDice.setGame(game);
+        User turnUser = gameState.getTurnUser();
+        gameLogDice.setLog(turnUser.getFirstName() + " rolled the dice and got " + dice1 + " and " + dice2 + ".");
+        gameLogRepository.save(gameLogDice);
+
         gameState.setDice1(dice1);
         gameState.setDice2(dice2);
 
@@ -305,7 +273,6 @@ public class GameService {
 
         final List<UserState> userStates = userStateRepository.findByGameId(gameId);
 
-        Game game = gameState.getGame();
         final List<Resource> resources = game.getResources().stream()
                 .filter(resource -> resource.getNumber() == diceSum).toList();
 
@@ -313,6 +280,13 @@ public class GameService {
 
             final List<Integer> settlements = userState.getSettlements();
             final List<Integer> cities = userState.getCities();
+
+            int numberOfBrick = 0;
+            int numberOfLumber = 0;
+            int numberOfOre = 0;
+            int numberOfGrain = 0;
+            int numberOfWool = 0;
+
             for (Integer settlement : settlements) {
                 final List<Integer> resourceIndexesNearSettlement = ResourceSettlementMapper
                         .getInstance().getResourceIndexesNearSettlement(settlement);
@@ -329,23 +303,19 @@ public class GameService {
 
                     switch (resource.get().getType()) {
                         case "hills":
-                            userState.setNumberOfBrick(userState.getNumberOfBrick() + 1);
+                            numberOfBrick += 1;
                             break;
                         case "forest":
-                            userState.setNumberOfLumber(
-                                    userState.getNumberOfLumber() + 1);
+                            numberOfLumber += 1;
                             break;
                         case "mountains":
-                            userState.setNumberOfOre(
-                                    userState.getNumberOfOre() + 1);
+                            numberOfOre += 1;
                             break;
                         case "fields":
-                            userState.setNumberOfGrain(
-                                    userState.getNumberOfGrain() + 1);
+                            numberOfGrain += 1;
                             break;
                         case "pasture":
-                            userState.setNumberOfWool(
-                                    userState.getNumberOfWool() + 1);
+                            numberOfWool += 1;
                             break;
                         default:
                             break;
@@ -369,23 +339,19 @@ public class GameService {
 
                     switch (resource.get().getType()) {
                         case "hills":
-                            userState.setNumberOfBrick(userState.getNumberOfBrick() + 2);
+                            numberOfBrick += 2;
                             break;
                         case "forest":
-                            userState.setNumberOfLumber(
-                                    userState.getNumberOfLumber() + 2);
+                            numberOfLumber += 2;
                             break;
                         case "mountains":
-                            userState.setNumberOfOre(
-                                    userState.getNumberOfOre() + 2);
+                            numberOfOre += 2;
                             break;
                         case "fields":
-                            userState.setNumberOfGrain(
-                                    userState.getNumberOfGrain() + 2);
+                            numberOfGrain += 2;
                             break;
                         case "pasture":
-                            userState.setNumberOfWool(
-                                    userState.getNumberOfWool() + 2);
+                            numberOfWool += 2;
                             break;
                         default:
                             break;
@@ -393,17 +359,18 @@ public class GameService {
                 }
             }
 
-            int numberOfBrick = userState.getNumberOfBrick();
-            int numberOfLumber = userState.getNumberOfLumber();
-            int numberOfOre = userState.getNumberOfOre();
-            int numberOfGrain = userState.getNumberOfGrain();
-            int numberOfWool = userState.getNumberOfWool();
+            GameLog gameLog = new GameLog();
+            gameLog.setGame(game);
+            User user = userState.getUser();
+            gameLog.setLog(user.getFirstName() + " got " + numberOfBrick + " brick, " + numberOfLumber + " lumber, "
+                    + numberOfOre + " ore, " + numberOfGrain + " grain, " + numberOfWool + " wool.");
+            gameLogRepository.save(gameLog);
 
-            userState.setNumberOfBrick(numberOfBrick);
-            userState.setNumberOfLumber(numberOfLumber);
-            userState.setNumberOfOre(numberOfOre);
-            userState.setNumberOfGrain(numberOfGrain);
-            userState.setNumberOfWool(numberOfWool);
+            userState.setNumberOfBrick(numberOfBrick + userState.getNumberOfBrick());
+            userState.setNumberOfLumber(numberOfLumber + userState.getNumberOfLumber());
+            userState.setNumberOfOre(numberOfOre + userState.getNumberOfOre());
+            userState.setNumberOfGrain(numberOfGrain + userState.getNumberOfGrain());
+            userState.setNumberOfWool(numberOfWool + userState.getNumberOfWool());
 
             userStateRepository.save(userState);
         }
@@ -411,6 +378,7 @@ public class GameService {
         gameState.setTurnState(TurnState.BUILD);
 
         gameStateRepository.save(gameState);
+
     }
 
     public void endTurn(
@@ -441,9 +409,16 @@ public class GameService {
         String idOfNextTurnUser = game.getUsersCycle().get(indexOfNextTurnUser);
         User nextTurnUser = userRepository.findById(UUID.fromString(idOfNextTurnUser)).get();
 
+        GameLog gameLog = new GameLog();
+        gameLog.setGame(game);
+        User turnUser = gameState.getTurnUser();
+        gameLog.setLog(turnUser.getFirstName() + " ended the turn.");
+        gameLogRepository.save(gameLog);
+
         gameState.setTurnUser(nextTurnUser);
         gameState.setTurnState(TurnState.ROLL);
         gameStateRepository.save(gameState);
+
     }
 
     public void buildRoad(
@@ -490,6 +465,13 @@ public class GameService {
         userState.setRoads(updatedRoads);
 
         userStateRepository.save(userState);
+
+        GameLog gameLog = new GameLog();
+        Game game = gameState.getGame();
+        gameLog.setGame(game);
+        User turnUser = gameState.getTurnUser();
+        gameLog.setLog(turnUser.getFirstName() + " built a road.");
+        gameLogRepository.save(gameLog);
     }
 
     public void buildSettlement(
@@ -540,6 +522,13 @@ public class GameService {
         userState.setSettlements(updatedSettlements);
 
         userStateRepository.save(userState);
+
+        GameLog gameLog = new GameLog();
+        Game game = gameState.getGame();
+        gameLog.setGame(game);
+        User turnUser = gameState.getTurnUser();
+        gameLog.setLog(turnUser.getFirstName() + " built a settlement.");
+        gameLogRepository.save(gameLog);
 
     }
 
@@ -594,6 +583,13 @@ public class GameService {
         userState.setCities(updatedCities);
 
         userStateRepository.save(userState);
+
+        GameLog gameLog = new GameLog();
+        Game game = gameState.getGame();
+        gameLog.setGame(game);
+        User turnUser = gameState.getTurnUser();
+        gameLog.setLog(turnUser.getFirstName() + " built a city.");
+        gameLogRepository.save(gameLog);
     }
 
     public void chooseSettlementAndRoadForBot(
@@ -610,6 +606,13 @@ public class GameService {
             // TODO : Throw exception
             return;
         }
+
+        GameLog gameLog = new GameLog();
+        Game game = gameState.getGame();
+        gameLog.setGame(game);
+        User turnUser = gameState.getTurnUser();
+        gameLog.setLog(turnUser.getFirstName() + " chose a settlement and a road.");
+        gameLogRepository.save(gameLog);
 
         List<Integer> allSettlements = new ArrayList<>();
 
@@ -664,8 +667,6 @@ public class GameService {
 
             final List<Integer> resourceIndexesNearSettlement = ResourceSettlementMapper.getInstance()
                     .getResourceIndexesNearSettlement(randomSettlementIndex);
-
-            final Game game = gameState.getGame();
 
             for (Integer resourceIndex : resourceIndexesNearSettlement) {
                 Resource resource = game.getResources().stream()
@@ -849,9 +850,25 @@ public class GameService {
                     numberOfGrain);
             userState.setNumberOfWool(
                     numberOfWool);
+
+            GameLog gameLog = new GameLog();
+            gameLog.setGame(game);
+            User turnUser = gameState.getTurnUser();
+            gameLog.setLog(turnUser.getFirstName() + " chose a settlement. Got " + numberOfBrick + " brick, "
+                    + numberOfLumber + " lumber, " + numberOfOre + " ore, " + numberOfGrain + " grain, " + numberOfWool
+                    + " wool.");
+            gameLogRepository.save(gameLog);
+            userStateRepository.save(userState);
+            return;
         }
 
         userStateRepository.save(userState);
+        GameLog gameLog = new GameLog();
+        Game game = gameState.getGame();
+        gameLog.setGame(game);
+        User turnUser = gameState.getTurnUser();
+        gameLog.setLog(turnUser.getFirstName() + " chose a settlement.");
+        gameLogRepository.save(gameLog);
     }
 
     public void chooseRoad(
@@ -868,6 +885,13 @@ public class GameService {
             // TODO : Throw exception
             return;
         }
+
+        GameLog gameLog = new GameLog();
+        Game game = gameState.getGame();
+        gameLog.setGame(game);
+        User turnUser = gameState.getTurnUser();
+        gameLog.setLog(turnUser.getFirstName() + " chose a road.");
+        gameLogRepository.save(gameLog);
 
         UserOptions userOptions = getUserOptions(gameId, userId);
 
@@ -906,6 +930,11 @@ public class GameService {
         }
 
         gameStateRepository.save(gameState);
+
+    }
+
+    public List<GameLog> getGameLogs(int gameId) {
+        return gameLogRepository.findByGameId(gameId);
     }
 
 }
