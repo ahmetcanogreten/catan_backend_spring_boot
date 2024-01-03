@@ -102,4 +102,18 @@ public class SettlementRoadMapper {
         return new ArrayList<>(villages);
     }
 
+    public List<Integer> getRoadsOfRoad(int roadIndex) {
+
+        Set<Integer> villages = new HashSet<>(
+                getVillageOfRoads(roadIndex));
+
+        Set<Integer> roads = new HashSet<>();
+
+        for (Integer village : villages) {
+            roads.addAll(getRoadsOfVillage(village));
+        }
+
+        roads.remove(roadIndex);
+        return new ArrayList<>(roads);
+    }
 }

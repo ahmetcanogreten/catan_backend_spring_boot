@@ -957,11 +957,60 @@ public class GameService {
         return gameLogRepository.findByGameId(gameId);
     }
 
+    private Integer calculateLongestRoad(
+            List<Integer> walkedRoads,
+            List<Integer> allRoads) {
+
+        List<Integer> neighbours = new ArrayList<>();
+
+        if (walkedRoads.isEmpty()) {
+            neighbours.addAll(allRoads);
+        } else {
+            int latestWalkedRoad = walkedRoads.get(walkedRoads.size() - 1);
+
+            List<Integer> mayBeNeighbours = SettlementRoadMapper.getInstance().getRoadsOfRoad(latestWalkedRoad);
+
+            List<Integer> mayBeNeighboursOfPrevious = List.of();
+
+            if (walkedRoads.size() > 1) {
+                int previousWalkedRoad = walkedRoads.get(walkedRoads.size() - 2);
+                mayBeNeighboursOfPrevious = SettlementRoadMapper.getInstance().getRoadsOfRoad(previousWalkedRoad);
+            }
+
+            for (Integer mayBeNeighbour : mayBeNeighbours) {
+                if (allRoads.contains(mayBeNeighbour) && !walkedRoads.contains(mayBeNeighbour) &&
+                        !mayBeNeighboursOfPrevious.contains(mayBeNeighbour)) {
+                    neighbours.add(mayBeNeighbour);
+                }
+            }
+        }
+
+        int longestRoad = 0;
+
+        for (Integer neighbour : neighbours) {
+            List<Integer> newWalkedRoads = new ArrayList<>(walkedRoads);
+            newWalkedRoads.add(neighbour);
+
+            List<Integer> newAllRoads = new ArrayList<>(allRoads);
+            newAllRoads.removeAll(newWalkedRoads);
+
+            int newLongestRoad = calculateLongestRoad(newWalkedRoads, newAllRoads);
+
+            if (newLongestRoad > longestRoad) {
+                longestRoad = newLongestRoad;
+            }
+        }
+
+        return longestRoad + 1;
+    }
+
     public List<UserWithInGamePoints> getUsersPoints(int gameId) {
 
         final List<UserState> userStates = userStateRepository.findByGameId(gameId);
 
         List<UserWithInGamePoints> usersWithPoints = new ArrayList<>();
+
+        Map<UUID, Integer> longestRoads = new HashMap<>();
 
         for (UserState userState : userStates) {
             UserWithInGamePoints userWithPoints = new UserWithInGamePoints();
@@ -975,13 +1024,36 @@ public class GameService {
 
             points += settlements.size();
             points += 2 * cities.size();
-            // TODO : Add longest road points
+
+            // Calculate longest road
+            int longestRoad = calculateLongestRoad(
+                    List.of(),
+                    roads) - 1;
+            longestRoads.put(userState.getUser().getId(), longestRoad);
 
             userWithPoints.setPoints(points);
             usersWithPoints.add(userWithPoints);
         }
 
+        // Calculate longest road points
+        int maxLongestRoad = 0;
+        UUID maxLongestRoadUserId = null;
+
+        for (Map.Entry<UUID, Integer> entry : longestRoads.entrySet()) {
+            if (entry.getValue() > maxLongestRoad) {
+                maxLongestRoad = entry.getValue();
+                maxLongestRoadUserId = entry.getKey();
+            }
+        }
+
+        if (maxLongestRoad >= 5) {
+            for (UserWithInGamePoints userWithInGamePoints : usersWithPoints) {
+                if (userWithInGamePoints.getId().equals(maxLongestRoadUserId)) {
+                    userWithInGamePoints.setPoints(userWithInGamePoints.getPoints() + 2);
+                }
+            }
+        }
+
         return usersWithPoints;
     }
-
 }
