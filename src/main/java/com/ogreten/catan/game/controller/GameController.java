@@ -82,6 +82,23 @@ public class GameController {
 
         }
 
+        @ApiResponse(responseCode = "200", content = {
+                        @Content(schema = @Schema(implementation = Game.class), mediaType = "application/json") })
+        @ApiResponse(responseCode = "404", content = {
+                        @Content(schema = @Schema()) })
+        @GetMapping("/room/{roomId}")
+        public ResponseEntity<Game> getGameByRoomId(
+                        @Parameter(description = "Room id of the game to be started.", example = "1") @PathVariable int roomId) {
+                Optional<Game> optionalGame = gameService.getGameByRoomId(roomId);
+
+                if (optionalGame.isEmpty()) {
+                        return ResponseEntity.notFound().build();
+                }
+
+                return ResponseEntity.ok().body(optionalGame.get());
+
+        }
+
         @Operation(summary = "Start a game", description = "Start a game from existing room.", tags = { "game",
                         "post" })
         @ApiResponse(responseCode = "200", content = {

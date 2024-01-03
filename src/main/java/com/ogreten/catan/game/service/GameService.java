@@ -144,6 +144,12 @@ public class GameService {
         return optionalGame;
     }
 
+    public Optional<Game> getGameByRoomId(
+            int roomId) {
+        return gameRepository.findByRoomId(roomId);
+
+    }
+
     public Optional<GameState> getGameState(
             int gameId) {
         Optional<GameState> optionalGameState = gameStateRepository.findByGameId(gameId);
