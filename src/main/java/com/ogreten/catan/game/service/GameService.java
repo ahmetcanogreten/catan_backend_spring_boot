@@ -29,6 +29,8 @@ import com.ogreten.catan.game.schema.UserOptions;
 import com.ogreten.catan.game.schema.UserWithInGamePoints;
 import com.ogreten.catan.game.util.ResourceSettlementMapper;
 import com.ogreten.catan.game.util.SettlementRoadMapper;
+import com.ogreten.catan.leaderboard.domain.UserEarnedPoints;
+import com.ogreten.catan.leaderboard.repository.LeaderboardRepository;
 import com.ogreten.catan.room.domain.Resource;
 import com.ogreten.catan.room.domain.Room;
 import com.ogreten.catan.room.repository.RoomRepository;
@@ -42,17 +44,20 @@ public class GameService {
     UserStateRepository userStateRepository;
     UserRepository userRepository;
     GameLogRepository gameLogRepository;
+    LeaderboardRepository leaderboardRepository;
 
     public GameService(RoomRepository roomRepository, GameRepository gameRepository,
             GameStateRepository gameStateRepository, UserStateRepository userStateRepository,
             UserRepository userRepository,
-            GameLogRepository gameLogRepository) {
+            GameLogRepository gameLogRepository,
+            LeaderboardRepository leaderboardRepository) {
         this.roomRepository = roomRepository;
         this.gameRepository = gameRepository;
         this.gameStateRepository = gameStateRepository;
         this.userStateRepository = userStateRepository;
         this.userRepository = userRepository;
         this.gameLogRepository = gameLogRepository;
+        this.leaderboardRepository = leaderboardRepository;
     }
 
     public Optional<Game> createGame(int roomId) {
@@ -403,6 +408,7 @@ public class GameService {
 
     public void endTurn(
             int gameId, UUID userId) {
+
         Optional<GameState> optionalGameState = gameStateRepository.findByGameId(gameId);
 
         if (optionalGameState.isEmpty()) {
@@ -412,6 +418,27 @@ public class GameService {
 
         GameState gameState = optionalGameState.get();
         Game game = gameState.getGame();
+
+        // Check if game is finished
+        List<UserWithInGamePoints> userWithInGamePointsList = getUsersPoints(gameId);
+
+        for (UserWithInGamePoints userWithInGamePoints : userWithInGamePointsList) {
+            if (userWithInGamePoints.getId().equals(userId) &&
+                    userWithInGamePoints.getPoints() >= 8) {
+                game.setFinishedAt(Instant.now());
+                gameRepository.save(game);
+
+                for (UserWithInGamePoints userWithInGamePoints1 : userWithInGamePointsList) {
+                    User user = userRepository.findById(userWithInGamePoints1.getId()).get();
+                    UserEarnedPoints userEarnedPoints = new UserEarnedPoints();
+                    userEarnedPoints.setUser(user);
+                    userEarnedPoints.setPoints(userWithInGamePoints1.getPoints());
+                    userEarnedPoints.setAt(Instant.now());
+                    leaderboardRepository.save(userEarnedPoints);
+                }
+                return;
+            }
+        }
 
         if (gameState.getTurnState() != TurnState.BUILD) {
             // TODO: Throw exception
