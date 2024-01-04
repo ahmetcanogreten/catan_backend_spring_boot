@@ -13,10 +13,10 @@ import com.ogreten.catan.leaderboard.schema.UserWithPointsOut;
 public interface LeaderboardRepository extends JpaRepository<UserEarnedPoints, Integer> {
 
         @Query(value = """
-                        SELECT new com.ogreten.catan.leaderboard.schema.UserWithPointsOut(new com.ogreten.catan.auth.schema.UserWithoutPasswordOut(u.id, u.email, u.firstName, u.lastName), SUM(uep.points) as points)
+                        SELECT new com.ogreten.catan.leaderboard.schema.UserWithPointsOut(new com.ogreten.catan.auth.schema.UserWithoutPasswordOut(u.id, u.email, u.firstName, u.lastName, false), SUM(uep.points) as points)
                         FROM User u
                         JOIN UserEarnedPoints uep ON uep.user = u
-                        WHERE uep.at >= ?1 AND uep.at <= ?2
+                        WHERE uep.at >= ?1 AND uep.at <= ?2 AND u.bot = false
                         GROUP BY u.id
                         ORDER BY SUM(uep.points) DESC
                         """)
