@@ -1,7 +1,6 @@
 package com.ogreten.catan.room.controller;
 
-import java.util.Optional;
-import java.util.Set;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,11 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ogreten.catan.auth.domain.CustomUserDetails;
 import com.ogreten.catan.auth.domain.User;
-import com.ogreten.catan.auth.repository.UserRepository;
+import com.ogreten.catan.room.domain.Resource;
 import com.ogreten.catan.room.domain.Room;
-import com.ogreten.catan.room.repository.RoomRepository;
+import com.ogreten.catan.room.exceptions.RoomNotFoundException;
 import com.ogreten.catan.room.schema.RoomWithOnlyNameIn;
-import com.ogreten.catan.utils.RandomStringGenerator;
+import com.ogreten.catan.room.service.RoomService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -39,12 +38,10 @@ import jakarta.transaction.Transactional;
 @RequestMapping("/api/rooms")
 public class RoomController {
 
-        RoomRepository roomRepository;
-        UserRepository userRepository;
+        RoomService roomService;
 
-        public RoomController(RoomRepository roomRepository, UserRepository userRepository) {
-                this.roomRepository = roomRepository;
-                this.userRepository = userRepository;
+        public RoomController(RoomService roomService) {
+                this.roomService = roomService;
         }
 
         @Operation(summary = "Get active rooms", description = "Get active rooms. That is rooms whose games are not started yet.", tags = {
@@ -57,7 +54,8 @@ public class RoomController {
                         @Parameter(description = "Page of the active rooms.", example = "0") @RequestParam(defaultValue = "0") int pageNo,
                         @Parameter(description = "Page size of the active rooms.", example = "10") @RequestParam(defaultValue = "10") int pageSize) {
                 Pageable pageable = PageRequest.of(pageNo, pageSize);
-                return roomRepository.findAllByIsGameStartedFalse(pageable);
+                return roomService.getActiveRooms(pageable);
+
         }
 
         @Operation(summary = "Create a room", description = "Create a room with a name", tags = {
@@ -70,15 +68,13 @@ public class RoomController {
                         @AuthenticationPrincipal CustomUserDetails customUserDetails,
                         @Parameter(description = "Name of the room", example = "My Room") @RequestBody RoomWithOnlyNameIn roomWithOnlyNameIn) {
                 User user = customUserDetails.getUser();
+                String roomName = roomWithOnlyNameIn.getName();
+                List<Resource> resources = roomWithOnlyNameIn.getResources();
 
-                Room room = new Room();
-                room.setResources(roomWithOnlyNameIn.getResources());
-                room.setOwner(user);
-                room.setName(roomWithOnlyNameIn.getName());
-                room.setCode(RandomStringGenerator.generate(Room.CODE_LENGTH));
-                room.setGameStarted(false);
-                room.setUsers(Set.of(user));
-                return roomRepository.save(room);
+                return roomService.createRoom(
+                                roomName,
+                                resources,
+                                user);
         }
 
         @Operation(summary = "Join a room", description = "Join a room using the join code", tags = {
@@ -91,17 +87,17 @@ public class RoomController {
         @PostMapping("/join")
         public ResponseEntity<Room> joinRoom(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                         @Parameter(description = "The join code of the room to be joined.", example = "123456") @RequestParam String code) {
-                User user = customUserDetails.getUser();
+                try {
 
-                Optional<Room> optionalRoom = roomRepository.findByCode(code);
-                if (optionalRoom.isEmpty()) {
+                        User user = customUserDetails.getUser();
+                        Room room = roomService.joinRoom(code, user);
+
+                        return ResponseEntity.ok(room);
+                } catch (RoomNotFoundException e) {
                         return ResponseEntity.notFound().build();
+                } catch (Exception e) {
+                        return ResponseEntity.badRequest().build();
                 }
-
-                Room room = optionalRoom.get();
-                room.getUsers().add(user);
-                roomRepository.save(room);
-                return ResponseEntity.ok(room);
         }
 
         @Operation(summary = "Get a room", description = "Get a room using room id", tags = {
@@ -114,14 +110,14 @@ public class RoomController {
         @GetMapping("/{roomId}")
         public ResponseEntity<Room> getRoom(
                         @Parameter(description = "roomId", example = "7") @PathVariable int roomId) {
-
-                Optional<Room> optionalRoom = roomRepository.findById(roomId);
-                if (optionalRoom.isEmpty()) {
+                try {
+                        Room room = roomService.getRoom(roomId);
+                        return ResponseEntity.ok(room);
+                } catch (RoomNotFoundException e) {
                         return ResponseEntity.notFound().build();
+                } catch (Exception e) {
+                        return ResponseEntity.badRequest().build();
                 }
-
-                Room room = optionalRoom.get();
-                return ResponseEntity.ok(room);
         }
 
         @Operation(summary = "Update the room", description = "Update the room using room id", tags = {
@@ -137,17 +133,17 @@ public class RoomController {
                         @Parameter(description = "Room with name and resources") @RequestBody RoomWithOnlyNameIn roomWithOnlyNameIn
 
         ) {
+                try {
+                        List<Resource> resources = roomWithOnlyNameIn.getResources();
 
-                Optional<Room> optionalRoom = roomRepository.findById(roomId);
-                if (optionalRoom.isEmpty()) {
+                        Room room = roomService.updateRoom(roomId, resources);
+                        return ResponseEntity.ok(room);
+                } catch (RoomNotFoundException e) {
                         return ResponseEntity.notFound().build();
+                } catch (Exception e) {
+                        return ResponseEntity.badRequest().build();
                 }
 
-                Room room = optionalRoom.get();
-                room.setResources(roomWithOnlyNameIn.getResources());
-
-                roomRepository.save(room);
-                return ResponseEntity.ok(room);
         }
 
         @Operation(summary = "Update the room", description = "Update the room using room id", tags = {
@@ -162,62 +158,15 @@ public class RoomController {
                         @Parameter(description = "roomId", example = "7") @PathVariable int roomId
 
         ) {
-
-                Optional<Room> optionalRoom = roomRepository.findById(roomId);
-                if (optionalRoom.isEmpty()) {
+                try {
+                        Room room = roomService.addBotToRoom(roomId);
+                        return ResponseEntity.ok(room);
+                } catch (RoomNotFoundException e) {
                         return ResponseEntity.notFound().build();
+                } catch (Exception e) {
+                        return ResponseEntity.badRequest().build();
                 }
 
-                Room room = optionalRoom.get();
-
-                int size = room.getUsers().size();
-
-                User bot;
-                switch (size) {
-                        case 1:
-                                bot = userRepository.findByEmail("bot1@bot.com").orElseGet(() -> {
-                                        User user = new User();
-                                        user.setEmail("bot1@bot.com");
-                                        user.setFirstName("Barbara");
-                                        user.setLastName("Liskov");
-                                        user.setBot(true);
-                                        userRepository.save(user);
-                                        return user;
-
-                                });
-                                break;
-                        case 2:
-                                bot = userRepository.findByEmail("bot2@bot.com").orElseGet(() -> {
-                                        User user = new User();
-                                        user.setEmail("bot2@bot.com");
-                                        user.setFirstName("Alan");
-                                        user.setLastName("Turing");
-                                        user.setBot(true);
-                                        userRepository.save(user);
-                                        return user;
-
-                                });
-                                break;
-                        case 3:
-                                bot = userRepository.findByEmail("bot3@bot.com").orElseGet(() -> {
-                                        User user = new User();
-                                        user.setEmail("bot3@bot.com");
-                                        user.setFirstName("Ada");
-                                        user.setLastName("Lovelace");
-                                        user.setBot(true);
-                                        userRepository.save(user);
-                                        return user;
-
-                                });
-                                break;
-                        default:
-                                return ResponseEntity.badRequest().build();
-                }
-
-                room.getUsers().add(bot);
-
-                roomRepository.save(room);
-                return ResponseEntity.ok(room);
         }
 
 }

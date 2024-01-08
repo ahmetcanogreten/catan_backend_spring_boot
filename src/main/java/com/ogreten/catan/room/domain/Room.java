@@ -1,7 +1,6 @@
 package com.ogreten.catan.room.domain;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.annotations.JdbcTypeCode;
@@ -16,6 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -23,6 +23,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Room {
     public static final int CODE_LENGTH = 6;
 
