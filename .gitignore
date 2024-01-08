@@ -27,4 +27,4 @@ build/
 
 
 
-target/**/*.class
+target/**
