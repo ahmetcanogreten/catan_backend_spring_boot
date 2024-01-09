@@ -10,6 +10,7 @@ import com.ogreten.catan.game.domain.GameState;
 import com.ogreten.catan.game.domain.UserState;
 import com.ogreten.catan.game.schema.BuildInfo;
 import com.ogreten.catan.game.schema.RollInfo;
+import com.ogreten.catan.game.schema.TradeOffer;
 import com.ogreten.catan.game.schema.UserOptions;
 import com.ogreten.catan.game.schema.UserWithInGamePoints;
 import com.ogreten.catan.game.service.GameService;
@@ -285,6 +286,30 @@ public class GameController {
                 List<UserWithInGamePoints> usersPoints = gameService.getUsersPoints(gameId);
 
                 return ResponseEntity.ok().body(usersPoints);
+        }
+
+        @PostMapping("/{gameId}/trades")
+        public void createTradeOffer(
+                        @PathVariable int gameId,
+                        @RequestBody TradeOffer tradeOffer
+
+        ) {
+                gameService.createTradeOffer(gameId, tradeOffer);
+        }
+
+        @PostMapping("/{gameId}/accept-trade")
+        public void acceptTradeOffer(
+                        @PathVariable int gameId,
+                        @RequestParam UUID userId
+
+        ) {
+                gameService.acceptTradeOffer(gameId, userId);
+        }
+
+        @PostMapping("/{gameId}/cancel-trade")
+        public void cancelTradeOffer(
+                        @PathVariable int gameId) {
+                gameService.cancelTradeOffer(gameId);
         }
 
 }

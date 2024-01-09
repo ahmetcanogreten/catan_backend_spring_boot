@@ -7,30 +7,34 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Data
 @NoArgsConstructor
-public class GameState {
+@Builder
+@AllArgsConstructor
+public class Trade {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @OneToOne
-    private Game game;
+    private int wantHills;
+    private int wantForest;
+    private int wantMountains;
+    private int wantFields;
+    private int wantPasture;
+
+    private int giveHills;
+    private int giveForest;
+    private int giveMountains;
+    private int giveFields;
+    private int givePasture;
 
     @ManyToOne
-    private User turnUser;
-
-    private TurnState turnState;
-
-    private int dice1;
-    private int dice2;
-
-    @OneToOne
-    private Trade trade;
+    private User offerer;
 }

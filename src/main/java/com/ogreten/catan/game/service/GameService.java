@@ -19,12 +19,15 @@ import com.ogreten.catan.auth.repository.UserRepository;
 import com.ogreten.catan.game.domain.Game;
 import com.ogreten.catan.game.domain.GameLog;
 import com.ogreten.catan.game.domain.GameState;
+import com.ogreten.catan.game.domain.Trade;
 import com.ogreten.catan.game.domain.TurnState;
 import com.ogreten.catan.game.domain.UserState;
 import com.ogreten.catan.game.repository.GameLogRepository;
 import com.ogreten.catan.game.repository.GameRepository;
 import com.ogreten.catan.game.repository.GameStateRepository;
+import com.ogreten.catan.game.repository.TradeRepository;
 import com.ogreten.catan.game.repository.UserStateRepository;
+import com.ogreten.catan.game.schema.TradeOffer;
 import com.ogreten.catan.game.schema.UserOptions;
 import com.ogreten.catan.game.schema.UserWithInGamePoints;
 import com.ogreten.catan.game.util.ResourceSettlementMapper;
@@ -45,12 +48,14 @@ public class GameService {
     UserRepository userRepository;
     GameLogRepository gameLogRepository;
     LeaderboardRepository leaderboardRepository;
+    TradeRepository tradeRepository;
 
     public GameService(RoomRepository roomRepository, GameRepository gameRepository,
             GameStateRepository gameStateRepository, UserStateRepository userStateRepository,
             UserRepository userRepository,
             GameLogRepository gameLogRepository,
-            LeaderboardRepository leaderboardRepository) {
+            LeaderboardRepository leaderboardRepository,
+            TradeRepository tradeRepository) {
         this.roomRepository = roomRepository;
         this.gameRepository = gameRepository;
         this.gameStateRepository = gameStateRepository;
@@ -58,6 +63,7 @@ public class GameService {
         this.userRepository = userRepository;
         this.gameLogRepository = gameLogRepository;
         this.leaderboardRepository = leaderboardRepository;
+        this.tradeRepository = tradeRepository;
     }
 
     public Optional<Game> createGame(int roomId) {
@@ -1082,5 +1088,144 @@ public class GameService {
         }
 
         return usersWithPoints;
+    }
+
+    public void createTradeOffer(int gameId, TradeOffer tradeOffer) {
+        Trade trade = Trade.builder()
+                .wantHills(tradeOffer.getWantHills())
+                .wantForest(tradeOffer.getWantForest())
+                .wantMountains(tradeOffer.getWantMountains())
+                .wantFields(tradeOffer.getWantFields())
+                .wantPasture(tradeOffer.getWantPasture())
+                .giveHills(tradeOffer.getGiveHills())
+                .giveForest(tradeOffer.getGiveForest())
+                .giveMountains(tradeOffer.getGiveMountains())
+                .giveFields(tradeOffer.getGiveFields())
+                .givePasture(tradeOffer.getGivePasture())
+                .build();
+
+        trade = tradeRepository.save(trade);
+
+        GameState gameState = gameStateRepository.findByGameId(gameId).get();
+
+        gameState.setTrade(trade);
+
+        gameStateRepository.save(gameState);
+
+        GameLog gameLog = new GameLog();
+        Game game = gameState.getGame();
+        gameLog.setGame(game);
+        User turnUser = gameState.getTurnUser();
+        gameLog.setLog(turnUser.getFirstName() + " created a trade offer. Will give " + tradeOffer.getGiveHills() +
+                " hills, " + tradeOffer.getGiveForest() + " forest, " + tradeOffer.getGiveMountains() + " mountains, "
+                + tradeOffer.getGiveFields() + " fields, " + tradeOffer.getGivePasture() + " pasture. Will get "
+                + tradeOffer.getWantHills() + " hills, " + tradeOffer.getWantForest() + " forest, "
+                + tradeOffer.getWantMountains() + " mountains, " + tradeOffer.getWantFields() + " fields, "
+                + tradeOffer.getWantPasture() + " pasture.");
+        gameLogRepository.save(gameLog);
+    }
+
+    public void acceptTradeOffer(int gameId, UUID userId) {
+        Trade trade = gameStateRepository.findByGameId(gameId).get().getTrade();
+
+        int giveHills = trade.getGiveHills();
+        int giveForest = trade.getGiveForest();
+        int giveMountains = trade.getGiveMountains();
+        int giveFields = trade.getGiveFields();
+        int givePasture = trade.getGivePasture();
+
+        int wantHills = trade.getWantHills();
+        int wantForest = trade.getWantForest();
+        int wantMountains = trade.getWantMountains();
+        int wantFields = trade.getWantFields();
+        int wantPasture = trade.getWantPasture();
+
+        UUID offererUserId = gameStateRepository.findByGameId(gameId).get().getTurnUser().getId();
+
+        UserState offererUserState = userStateRepository.findByGameIdAndUserId(gameId, offererUserId).get();
+
+        UserState accepterUserState = userStateRepository.findByGameIdAndUserId(gameId, userId).get();
+
+        int offererNumberOfBrick = offererUserState.getNumberOfBrick();
+        offererNumberOfBrick -= giveHills;
+        offererNumberOfBrick += wantHills;
+
+        int offererNumberOfLumber = offererUserState.getNumberOfLumber();
+        offererNumberOfLumber -= giveForest;
+        offererNumberOfLumber += wantForest;
+
+        int offererNumberOfOre = offererUserState.getNumberOfOre();
+        offererNumberOfOre -= giveMountains;
+        offererNumberOfOre += wantMountains;
+
+        int offererNumberOfGrain = offererUserState.getNumberOfGrain();
+        offererNumberOfGrain -= giveFields;
+        offererNumberOfGrain += wantFields;
+
+        int offererNumberOfWool = offererUserState.getNumberOfWool();
+        offererNumberOfWool -= givePasture;
+        offererNumberOfWool += wantPasture;
+
+        int accepterNumberOfBrick = accepterUserState.getNumberOfBrick();
+        accepterNumberOfBrick -= wantHills;
+        accepterNumberOfBrick += giveHills;
+
+        int accepterNumberOfLumber = accepterUserState.getNumberOfLumber();
+        accepterNumberOfLumber -= wantForest;
+        accepterNumberOfLumber += giveForest;
+
+        int accepterNumberOfOre = accepterUserState.getNumberOfOre();
+        accepterNumberOfOre -= wantMountains;
+        accepterNumberOfOre += giveMountains;
+
+        int accepterNumberOfGrain = accepterUserState.getNumberOfGrain();
+        accepterNumberOfGrain -= wantFields;
+        accepterNumberOfGrain += giveFields;
+
+        int accepterNumberOfWool = accepterUserState.getNumberOfWool();
+        accepterNumberOfWool -= wantPasture;
+        accepterNumberOfWool += givePasture;
+
+        offererUserState.setNumberOfBrick(offererNumberOfBrick);
+        offererUserState.setNumberOfLumber(offererNumberOfLumber);
+        offererUserState.setNumberOfOre(offererNumberOfOre);
+        offererUserState.setNumberOfGrain(offererNumberOfGrain);
+        offererUserState.setNumberOfWool(offererNumberOfWool);
+
+        accepterUserState.setNumberOfBrick(accepterNumberOfBrick);
+        accepterUserState.setNumberOfLumber(accepterNumberOfLumber);
+        accepterUserState.setNumberOfOre(accepterNumberOfOre);
+        accepterUserState.setNumberOfGrain(accepterNumberOfGrain);
+        accepterUserState.setNumberOfWool(accepterNumberOfWool);
+
+        userStateRepository.save(offererUserState);
+        userStateRepository.save(accepterUserState);
+
+        GameState gameState = gameStateRepository.findByGameId(gameId).get();
+        gameState.setTrade(null);
+
+        gameStateRepository.save(gameState);
+
+        GameLog gameLog = new GameLog();
+        Game game = gameState.getGame();
+        gameLog.setGame(game);
+        User turnUser = gameState.getTurnUser();
+        gameLog.setLog(turnUser.getFirstName() + " accepted the trade offer.");
+        gameLogRepository.save(gameLog);
+    }
+
+    public void cancelTradeOffer(int gameId) {
+
+        GameState gameState = gameStateRepository.findByGameId(gameId).get();
+
+        gameState.setTrade(null);
+
+        gameStateRepository.save(gameState);
+        GameLog gameLog = new GameLog();
+        Game game = gameState.getGame();
+        gameLog.setGame(game);
+        User turnUser = gameState.getTurnUser();
+        gameLog.setLog(turnUser.getFirstName() + " cancelled the trade offer.");
+        gameLogRepository.save(gameLog);
     }
 }
