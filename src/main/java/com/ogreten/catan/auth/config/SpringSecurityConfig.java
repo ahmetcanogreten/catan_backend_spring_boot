@@ -1,6 +1,6 @@
 package com.ogreten.catan.auth.config;
 
-import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -48,15 +48,18 @@ public class SpringSecurityConfig {
         AuthenticationManager authenticationManager = authenticationManagerBuilder.build();
 
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("*"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedOrigins(List.of("*"));
+        configuration.setAllowedMethods(
+                List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
+        configuration.setMaxAge(3600L);
         configuration.setAllowCredentials(true);
+        configuration.addAllowedHeader("Requestor-Type");
+        configuration.addExposedHeader("X-Get-Header");
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
 
         return http.cors(cors -> cors.configurationSource(source))
-
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(
                         auth -> auth.requestMatchers(new AntPathRequestMatcher("/api/user/register"),
