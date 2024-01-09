@@ -2,6 +2,7 @@ package com.ogreten.catan.auth.controller;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,6 +28,7 @@ import jakarta.validation.Valid;
 @Tag(name = "User", description = "User Management API")
 @RequestMapping("api/user")
 @RestController
+@CrossOrigin
 public class UserController {
 
     private final UserRepository userRepository;
