@@ -1,6 +1,6 @@
 package com.ogreten.catan.auth.config;
 
-import java.util.List;
+import java.util.Arrays;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,17 +46,15 @@ public class SpringSecurityConfig {
 
         AuthenticationManager authenticationManager = authenticationManagerBuilder.build();
 
-        CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
-        corsConfiguration.setAllowedOrigins(List.of("catan-web.web.app", "https://catan-web.web.app"));
-        corsConfiguration
-                .setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PUT", "OPTIONS", "PATCH", "DELETE"));
-        corsConfiguration.setAllowCredentials(true);
-        corsConfiguration.setExposedHeaders(List.of("Authorization"));
+        return http.cors(cors -> cors.configurationSource(request -> {
+            CorsConfiguration configuration = new CorsConfiguration();
+            configuration.setAllowedOrigins(Arrays.asList("*"));
+            configuration.setAllowedMethods(Arrays.asList("*"));
+            configuration.setAllowedHeaders(Arrays.asList("*"));
+            configuration.setAllowCredentials(true);
+            return configuration;
 
-        return http.cors(
-                Customizer.withDefaults())
-                .csrf(csrf -> csrf.disable())
+        })).csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(
                         auth -> auth.requestMatchers(new AntPathRequestMatcher("/api/user/register"),
                                 new AntPathRequestMatcher("/swagger-ui/**"),
