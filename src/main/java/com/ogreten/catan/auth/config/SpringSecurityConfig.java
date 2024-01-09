@@ -1,7 +1,5 @@
 package com.ogreten.catan.auth.config;
 
-import java.util.Arrays;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,8 +11,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.ogreten.catan.auth.service.CustomUserDetailsService;
 
@@ -47,14 +43,7 @@ public class SpringSecurityConfig {
 
         AuthenticationManager authenticationManager = authenticationManagerBuilder.build();
 
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("*"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-
-        return http.cors(cors -> cors.configurationSource(source))
+        return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(
                         auth -> auth.requestMatchers(new AntPathRequestMatcher("/api/user/register"),
