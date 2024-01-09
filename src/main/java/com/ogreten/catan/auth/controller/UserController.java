@@ -28,7 +28,6 @@ import jakarta.validation.Valid;
 @Tag(name = "User", description = "User Management API")
 @RequestMapping("api/user")
 @RestController
-@CrossOrigin
 public class UserController {
 
     private final UserRepository userRepository;
