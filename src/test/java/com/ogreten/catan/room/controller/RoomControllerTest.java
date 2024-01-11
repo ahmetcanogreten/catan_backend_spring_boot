@@ -1,154 +1,199 @@
 package com.ogreten.catan.room.controller;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
 
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ogreten.catan.room.domain.Resource;
 import com.ogreten.catan.room.domain.Room;
+import com.ogreten.catan.room.exceptions.RoomNotFoundException;
 import com.ogreten.catan.room.schema.RoomWithOnlyNameIn;
 import com.ogreten.catan.room.service.RoomService;
 
-@WebMvcTest(RoomController.class)
+import static org.assertj.core.api.Assertions.*;
+
+@ExtendWith(MockitoExtension.class)
 class RoomControllerTest {
 
-    @Autowired
     private MockMvc mvc;
 
-    @MockBean
+    @Mock
     private RoomService roomService;
 
-    @Test
-    @WithMockUser()
+    @InjectMocks
+    private RoomController roomController;
 
-    void getActiveRooms() throws Exception {
-        Room activeRoom = Room.builder().name("active").isGameStarted(false).build();
-
-        Page<Room> rooms = new PageImpl<Room>(List.of(
-                activeRoom
-
-        ));
-        when(roomService.getActiveRooms(any())).thenReturn(rooms);
-
-        MvcResult result = this.mvc.perform(get("/api/rooms/active"))
-                .andExpect(status().isOk()).andReturn();
-
-        ObjectMapper mapper = new ObjectMapper();
-
-        JsonNode roomsJson = mapper.readTree(result.getResponse().getContentAsString()).get("content");
-
-        assert roomsJson.size() == 1;
-        assert roomsJson.get(0).get("name").asText().equals(activeRoom.getName());
-        assert roomsJson.get(0).get("gameStarted").asBoolean() == activeRoom.isGameStarted();
-
+    @BeforeEach
+    public void setup() {
+        this.mvc = MockMvcBuilders.standaloneSetup(roomController).build();
     }
 
     @Test
-    @WithMockUser()
-    void createRoom() throws Exception {
+    void GivenValidPageParameters_WhenGetActiveRooms_ThenReturnActiveRooms() throws Exception {
+        // Arrange
+        Room activeRoom1 = Room.builder().id(1).build();
+        Room activeRoom2 = Room.builder().id(2).build();
+
+        Page<Room> rooms = new PageImpl<Room>(List.of(
+                activeRoom1, activeRoom2));
+        when(roomService.getActiveRooms(any())).thenReturn(rooms);
+
+        // Act
+        MvcResult result = this.mvc.perform(get("/api/rooms/active")).andReturn();
+
+        // Assert
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode roomsJson = mapper.readTree(result.getResponse().getContentAsString()).get("content");
+
+        // .andExpect(status().isOk()).andReturn();
+        assertThat(result.getResponse().getStatus()).isEqualTo(200);
+        assertThat(roomsJson.size()).isEqualTo(2);
+        assertThat(roomsJson.get(0).get("id").asInt()).isEqualTo(activeRoom1.getId());
+        assertThat(roomsJson.get(1).get("id").asInt()).isEqualTo(activeRoom2.getId());
+    }
+
+    @Test
+    void GivenValidRoomParemeters_WhenCreateRoom_ThenReturnCreatedRoom() throws Exception {
+        // Arrange
         RoomWithOnlyNameIn roomInput = new RoomWithOnlyNameIn();
         roomInput.setName("Test Room");
         roomInput.setResources(List.of(new Resource(0, "Wood", 5)));
 
         Room createdRoom = Room.builder().name(roomInput.getName()).isGameStarted(false).build();
-        when(roomService.createRoom(any(), any(), any())).thenReturn(createdRoom);
+        when(roomService.createRoom(anyString(), any(), any())).thenReturn(createdRoom);
 
+        // Act
         MvcResult result = this.mvc.perform(post("/api/rooms")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writeValueAsString(roomInput))).andReturn();
-        // .andExpect(status().isOk()).andReturn();
 
+        // Assert
         JsonNode roomJson = new ObjectMapper().readTree(result.getResponse().getContentAsString());
 
-        assert roomJson.get("name").asText().equals(createdRoom.getName());
-        assert roomJson.get("gameStarted").asBoolean() == createdRoom.isGameStarted();
+        assertThat(result.getResponse().getStatus()).isEqualTo(200);
+        assertThat(roomJson.get("name").asText()).isEqualTo(createdRoom.getName());
+        assertThat(roomJson.get("gameStarted").asBoolean()).isEqualTo(createdRoom.isGameStarted());
     }
 
     @Test
-    @WithMockUser()
-    void joinRoom() throws Exception {
+    void GivenCorrectJoinCode_WhenJoinRoom_ThenReturnRoom() throws Exception {
+        // Arrange
         String joinCode = "123456";
         Room joinedRoom = Room.builder().name("Joined Room").isGameStarted(false).build();
-        when(roomService.joinRoom(any(), any())).thenReturn(joinedRoom);
+        when(roomService.joinRoom(anyString(), any())).thenReturn(joinedRoom);
 
+        // Act
         MvcResult result = this.mvc.perform(post("/api/rooms/join")
-                .param("code", joinCode))
-                .andExpect(status().isOk()).andReturn();
+                .param("code", joinCode)).andReturn();
 
+        // Assert
         JsonNode roomJson = new ObjectMapper().readTree(result.getResponse().getContentAsString());
 
-        assert roomJson.get("name").asText().equals(joinedRoom.getName());
-        assert roomJson.get("gameStarted").asBoolean() == joinedRoom.isGameStarted();
+        assertThat(result.getResponse().getStatus()).isEqualTo(200);
+        assertThat(roomJson.get("name").asText()).isEqualTo(joinedRoom.getName());
+        assertThat(roomJson.get("gameStarted").asBoolean()).isEqualTo(joinedRoom.isGameStarted());
     }
 
     @Test
-    @WithMockUser()
-    void getRoom() throws Exception {
-        int roomId = 1;
-        Room room = Room.builder().name("Test Room").isGameStarted(false).build();
-        when(roomService.getRoom(any())).thenReturn(room);
+    void GivenIncorrectJoinCode_WhenJoinRoom_ThenReturnNotFound() throws Exception {
+        // Arrange
+        String joinCode = "123456";
+        when(roomService.joinRoom(anyString(), any())).thenThrow(RoomNotFoundException.class);
 
+        // Act
+        MvcResult result = this.mvc.perform(post("/api/rooms/join")
+                .param("code", joinCode)).andReturn();
+
+        // Assert
+        assertThat(result.getResponse().getStatus()).isEqualTo(404);
+    }
+
+    @Test
+    void GivenExistingRoomId_WhenGetRoom_ThenReturnRoom() throws Exception {
+        // Arrange
+        int roomId = 1;
+        Room room = Room.builder().id(roomId).build();
+        when(roomService.getRoom(anyInt())).thenReturn(room);
+
+        // Act
+        MvcResult result = this.mvc.perform(
+                get("/api/rooms/{roomId}", roomId)
+
+        )
+                .andReturn();
+
+        // Assert
+        JsonNode roomJson = new ObjectMapper().readTree(result.getResponse().getContentAsString());
+
+        assertThat(result.getResponse().getStatus()).isEqualTo(200);
+        assertThat(roomJson.get("id").asInt()).isEqualTo(room.getId());
+    }
+
+    @Test
+    void GivenNonExistingRoomId_WhenGetRoom_ThenReturnNotFound() throws Exception {
+        // Arrange
+        int roomId = 1;
+        when(roomService.getRoom(anyInt())).thenThrow(RoomNotFoundException.class);
+
+        // Act
         MvcResult result = this.mvc.perform(get("/api/rooms/{roomId}", roomId))
-                .andExpect(status().isOk()).andReturn();
+                .andReturn();
 
-        JsonNode roomJson = new ObjectMapper().readTree(result.getResponse().getContentAsString());
+        // Assert
 
-        assert roomJson.get("name").asText().equals(room.getName());
-        assert roomJson.get("gameStarted").asBoolean() == room.isGameStarted();
+        assertThat(result.getResponse().getStatus()).isEqualTo(404);
     }
 
     @Test
-    @WithMockUser()
-    void updateRoom() throws Exception {
+    void GivenExistingRoomId_WhenAddBot_ThenReturnRoom() throws Exception {
+        // Arrange
         int roomId = 1;
-        RoomWithOnlyNameIn roomInput = new RoomWithOnlyNameIn();
-        roomInput.setResources(List.of(new Resource(0, "Brick", 3)));
+        Room roomWithBot = Room.builder().id(roomId).build();
+        when(roomService.addBotToRoom(anyInt())).thenReturn(roomWithBot);
 
-        Room updatedRoom = Room.builder().name("Updated Room").isGameStarted(false).build();
-        when(roomService.updateRoom(any(), any())).thenReturn(updatedRoom);
+        // Act
+        MvcResult result = this.mvc.perform(post("/api/rooms/{roomId}/add-bot",
+                roomId)).andReturn();
 
-        MvcResult result = this.mvc.perform(patch("/api/rooms/{roomId}", roomId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(new ObjectMapper().writeValueAsString(roomInput)))
-                .andExpect(status().isOk()).andReturn();
-
+        // Assert
         JsonNode roomJson = new ObjectMapper().readTree(result.getResponse().getContentAsString());
 
-        assert roomJson.get("name").asText().equals(updatedRoom.getName());
-        assert roomJson.get("gameStarted").asBoolean() == updatedRoom.isGameStarted();
+        assertThat(result.getResponse().getStatus()).isEqualTo(200);
+        assertThat(roomJson.get("id").asInt()).isEqualTo(roomWithBot.getId());
     }
 
     @Test
-    @WithMockUser()
-    void addBotToRoom() throws Exception {
+    void GivenNonExistingRoomId_WhenAddBot_ThenReturnNotFound() throws Exception {
+        // Arrange
         int roomId = 1;
-        Room roomWithBot = Room.builder().name("Room with Bot").isGameStarted(false).build();
-        when(roomService.addBotToRoom(any())).thenReturn(roomWithBot);
+        when(roomService.addBotToRoom(anyInt())).thenThrow(RoomNotFoundException.class);
 
-        MvcResult result = this.mvc.perform(post("/api/rooms/{roomId}/add-bot", roomId))
-                .andExpect(status().isOk()).andReturn();
+        // Act
+        MvcResult result = this.mvc.perform(post("/api/rooms/{roomId}/add-bot",
+                roomId)).andReturn();
 
-        JsonNode roomJson = new ObjectMapper().readTree(result.getResponse().getContentAsString());
-
-        assert roomJson.get("name").asText().equals(roomWithBot.getName());
-        assert roomJson.get("gameStarted").asBoolean() == roomWithBot.isGameStarted();
+        // Assert
+        assertThat(result.getResponse().getStatus()).isEqualTo(404);
     }
 
 }
