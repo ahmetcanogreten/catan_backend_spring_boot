@@ -43,6 +43,12 @@ class RoomControllerTest {
     @InjectMocks
     private RoomController roomController;
 
+    private static final String ROOM_PATH = "/api/rooms";
+    private static final String ROOM_ACTIVE_PATH = "/api/rooms/active";
+    private static final String ROOM_JOIN_PATH = "/api/rooms/join";
+    private static final String ROOM_GET_PATH = "/api/rooms/{roomId}";
+    private static final String ROOM_ADD_BOT_PATH = "/api/rooms/{roomId}/add-bot";
+
     @BeforeEach
     public void setup() {
         this.mvc = MockMvcBuilders.standaloneSetup(roomController).build();
@@ -59,7 +65,7 @@ class RoomControllerTest {
         when(roomService.getActiveRooms(any())).thenReturn(rooms);
 
         // Act
-        MvcResult result = this.mvc.perform(get("/api/rooms/active")).andReturn();
+        MvcResult result = this.mvc.perform(get(ROOM_ACTIVE_PATH)).andReturn();
 
         // Assert
         ObjectMapper mapper = new ObjectMapper();
@@ -83,7 +89,7 @@ class RoomControllerTest {
         when(roomService.createRoom(anyString(), any(), any())).thenReturn(createdRoom);
 
         // Act
-        MvcResult result = this.mvc.perform(post("/api/rooms")
+        MvcResult result = this.mvc.perform(post(ROOM_PATH)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writeValueAsString(roomInput))).andReturn();
 
@@ -103,7 +109,7 @@ class RoomControllerTest {
         when(roomService.joinRoom(anyString(), any())).thenReturn(joinedRoom);
 
         // Act
-        MvcResult result = this.mvc.perform(post("/api/rooms/join")
+        MvcResult result = this.mvc.perform(post(ROOM_JOIN_PATH)
                 .param("code", joinCode)).andReturn();
 
         // Assert
@@ -121,7 +127,7 @@ class RoomControllerTest {
         when(roomService.joinRoom(anyString(), any())).thenThrow(RoomNotFoundException.class);
 
         // Act
-        MvcResult result = this.mvc.perform(post("/api/rooms/join")
+        MvcResult result = this.mvc.perform(post(ROOM_JOIN_PATH)
                 .param("code", joinCode)).andReturn();
 
         // Assert
@@ -137,7 +143,7 @@ class RoomControllerTest {
 
         // Act
         MvcResult result = this.mvc.perform(
-                get("/api/rooms/{roomId}", roomId)
+                get(ROOM_GET_PATH, roomId)
 
         )
                 .andReturn();
@@ -156,7 +162,7 @@ class RoomControllerTest {
         when(roomService.getRoom(anyInt())).thenThrow(RoomNotFoundException.class);
 
         // Act
-        MvcResult result = this.mvc.perform(get("/api/rooms/{roomId}", roomId))
+        MvcResult result = this.mvc.perform(get(ROOM_GET_PATH, roomId))
                 .andReturn();
 
         // Assert
@@ -172,7 +178,7 @@ class RoomControllerTest {
         when(roomService.addBotToRoom(anyInt())).thenReturn(roomWithBot);
 
         // Act
-        MvcResult result = this.mvc.perform(post("/api/rooms/{roomId}/add-bot",
+        MvcResult result = this.mvc.perform(post(ROOM_ADD_BOT_PATH,
                 roomId)).andReturn();
 
         // Assert
@@ -189,7 +195,7 @@ class RoomControllerTest {
         when(roomService.addBotToRoom(anyInt())).thenThrow(RoomNotFoundException.class);
 
         // Act
-        MvcResult result = this.mvc.perform(post("/api/rooms/{roomId}/add-bot",
+        MvcResult result = this.mvc.perform(post(ROOM_ADD_BOT_PATH,
                 roomId)).andReturn();
 
         // Assert
