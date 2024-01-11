@@ -1,5 +1,6 @@
 package com.ogreten.catan.room.service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -59,7 +60,11 @@ public class RoomService {
         }
 
         Room room = optionalRoom.get();
-        room.getUsers().add(user);
+
+        Set<User> updatedUsers = new HashSet<>(room.getUsers());
+        updatedUsers.add(user);
+
+        room.setUsers(updatedUsers);
 
         return roomRepository.save(room);
     }
@@ -73,21 +78,6 @@ public class RoomService {
         }
 
         return optionalRoom.get();
-    }
-
-    public Room updateRoom(
-            int roomId,
-            List<Resource> resources) {
-
-        Optional<Room> optionalRoom = roomRepository.findById(roomId);
-        if (optionalRoom.isEmpty()) {
-            throw new RoomNotFoundException();
-        }
-
-        Room room = optionalRoom.get();
-        room.setResources(resources);
-
-        return roomRepository.save(room);
     }
 
     public Room addBotToRoom(
@@ -146,7 +136,10 @@ public class RoomService {
                 throw new RoomFullException();
         }
 
-        room.getUsers().add(bot);
+        Set<User> updatedUsers = new HashSet<>(room.getUsers());
+        updatedUsers.add(bot);
+
+        room.setUsers(updatedUsers);
 
         return roomRepository.save(room);
     }
