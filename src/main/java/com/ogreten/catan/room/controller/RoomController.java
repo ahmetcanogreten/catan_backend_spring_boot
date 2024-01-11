@@ -8,7 +8,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -82,8 +81,7 @@ public class RoomController {
                         "post" })
         @ApiResponse(responseCode = "200", content = {
                         @Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") })
-        @ApiResponse(responseCode = "404", content = {
-        })
+        @ApiResponse(responseCode = "404")
         @PostMapping("/join")
         public ResponseEntity<Room> joinRoom(@AuthenticationPrincipal CustomUserDetails customUserDetails,
                         @Parameter(description = "The join code of the room to be joined.", example = "123456") @RequestParam String code) {
@@ -95,8 +93,6 @@ public class RoomController {
                         return ResponseEntity.ok(room);
                 } catch (RoomNotFoundException e) {
                         return ResponseEntity.notFound().build();
-                } catch (Exception e) {
-                        return ResponseEntity.badRequest().build();
                 }
         }
 
@@ -105,8 +101,7 @@ public class RoomController {
                         "get" })
         @ApiResponse(responseCode = "200", content = {
                         @Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") })
-        @ApiResponse(responseCode = "404", content = {
-        })
+        @ApiResponse(responseCode = "404")
         @GetMapping("/{roomId}")
         public ResponseEntity<Room> getRoom(
                         @Parameter(description = "roomId", example = "7") @PathVariable int roomId) {
@@ -115,56 +110,21 @@ public class RoomController {
                         return ResponseEntity.ok(room);
                 } catch (RoomNotFoundException e) {
                         return ResponseEntity.notFound().build();
-                } catch (Exception e) {
-                        return ResponseEntity.badRequest().build();
                 }
         }
 
-        @Operation(summary = "Update the room", description = "Update the room using room id", tags = {
-                        "room",
-                        "patch" })
+        @Operation(summary = "Add a bot to the room", description = "Add a bot to the room using room id")
         @ApiResponse(responseCode = "200", content = {
-                        @Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") })
-        @ApiResponse(responseCode = "404", content = {
-        })
-        @PatchMapping("/{roomId}")
-        public ResponseEntity<Room> updateRoom(
-                        @Parameter(description = "roomId", example = "7") @PathVariable int roomId,
-                        @Parameter(description = "Room with name and resources") @RequestBody RoomWithOnlyNameIn roomWithOnlyNameIn
-
-        ) {
-                try {
-                        List<Resource> resources = roomWithOnlyNameIn.getResources();
-
-                        Room room = roomService.updateRoom(roomId, resources);
-                        return ResponseEntity.ok(room);
-                } catch (RoomNotFoundException e) {
-                        return ResponseEntity.notFound().build();
-                } catch (Exception e) {
-                        return ResponseEntity.badRequest().build();
-                }
-
-        }
-
-        @Operation(summary = "Update the room", description = "Update the room using room id", tags = {
-                        "room",
-                        "patch" })
-        @ApiResponse(responseCode = "200", content = {
-                        @Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") })
-        @ApiResponse(responseCode = "404", content = {
-        })
+                        @Content(schema = @Schema(implementation = Room.class), mediaType = "application/json") })
+        @ApiResponse(responseCode = "404")
         @PostMapping("/{roomId}/add-bot")
         public ResponseEntity<Room> addBot(
-                        @Parameter(description = "roomId", example = "7") @PathVariable int roomId
-
-        ) {
+                        @Parameter(description = "roomId", example = "7") @PathVariable int roomId) {
                 try {
                         Room room = roomService.addBotToRoom(roomId);
                         return ResponseEntity.ok(room);
                 } catch (RoomNotFoundException e) {
                         return ResponseEntity.notFound().build();
-                } catch (Exception e) {
-                        return ResponseEntity.badRequest().build();
                 }
 
         }
