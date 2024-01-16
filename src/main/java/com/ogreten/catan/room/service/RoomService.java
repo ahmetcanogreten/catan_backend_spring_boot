@@ -80,6 +80,21 @@ public class RoomService {
         return optionalRoom.get();
     }
 
+    public Room updateRoom(
+            int roomId,
+            List<Resource> resources) {
+
+        Optional<Room> optionalRoom = roomRepository.findById(roomId);
+        if (optionalRoom.isEmpty()) {
+            throw new RoomNotFoundException();
+        }
+
+        Room room = optionalRoom.get();
+        room.setResources(resources);
+
+        return roomRepository.save(room);
+    }
+
     public Room addBotToRoom(
             int roomId) {
 

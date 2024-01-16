@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -111,6 +112,32 @@ public class RoomController {
                 } catch (RoomNotFoundException e) {
                         return ResponseEntity.notFound().build();
                 }
+        }
+
+        @Operation(summary = "Update the room", description = "Update the room using room id", tags = {
+                        "room",
+                        "patch" })
+        @ApiResponse(responseCode = "200", content = {
+                        @Content(schema = @Schema(implementation = Page.class), mediaType = "application/json") })
+        @ApiResponse(responseCode = "404", content = {
+        })
+        @PatchMapping("/{roomId}")
+        public ResponseEntity<Room> updateRoom(
+                        @Parameter(description = "roomId", example = "7") @PathVariable int roomId,
+                        @Parameter(description = "Room with name and resources") @RequestBody RoomWithOnlyNameIn roomWithOnlyNameIn
+
+        ) {
+                try {
+                        List<Resource> resources = roomWithOnlyNameIn.getResources();
+
+                        Room room = roomService.updateRoom(roomId, resources);
+                        return ResponseEntity.ok(room);
+                } catch (RoomNotFoundException e) {
+                        return ResponseEntity.notFound().build();
+                } catch (Exception e) {
+                        return ResponseEntity.badRequest().build();
+                }
+
         }
 
         @Operation(summary = "Add a bot to the room", description = "Add a bot to the room using room id")
